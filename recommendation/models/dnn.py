@@ -1,5 +1,5 @@
 import torch.nn as nn
-from activation import ActivationLayer
+from recommendation.activations.activation import ActivationLayer
 from typing import List
 
 
