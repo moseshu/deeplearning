@@ -15,7 +15,12 @@ class EncoderRNNS(nn.Module):
         'rnn': nn.RNN,
     }
 
-    def __init__(self, input_size, hidden_size, out_size, n_layers=1, drop_prob=0, bidirectional=False, rnn_type="lstm"):
+    def __init__(self, vcab_size, hidden_size,
+                 out_size,
+                 n_layers=1,
+                 drop_prob=0,
+                 bidirectional=False,
+                 rnn_type="lstm"):
         """
 
         :param input_size: vocab size
@@ -39,32 +44,42 @@ class EncoderRNNS(nn.Module):
         self.rnn_type = rnn_type.lower()
         self.bidirectional = bidirectional
         self.out_size = out_size
-        self.embedding = nn.Embedding(input_size, hidden_size)
+        self.embedding = nn.Embedding(vcab_size, hidden_size)
         rnn_cell = self.supported_rnns[rnn_type.lower()]
         self.rnn = rnn_cell(
             input_size=hidden_size,
-            hidden_size=out_size,
+            hidden_size=hidden_size,
             num_layers=n_layers,
             bias=True,
             batch_first=True,
             dropout=drop_prob,
             bidirectional=bidirectional,
         )
+        self.fc = nn.Linear(in_features=hidden_size << 1 if self.bidirectional else hidden_size,
+                            out_features=out_size,
+                            bias=False)
 
-    def forward(self, inputs, hidden):
+        self.dropout = nn.Dropout(drop_prob)
+
+    def forward(self, inputs, hidden=None):
         # Embed input words
         embedded = self.embedding(inputs)  # batch,seq,embedding_dim
-        print(embedded.shape)
+        # print(embedded.shape)
         # Pass the embedded word vectors into LSTM and return all outputs
 
         output, hidden = self.rnn(embedded, hidden)
-
+        print(output.shape)
+        output = self.dropout(self.fc(output))
         return output, hidden
 
     def init_hidden(self, batch_size=1, device="cpu"):
-        (h0, c0) = (torch.zeros(self.n_layers << 1 if self.bidirectional else self.n_layers, batch_size, self.out_size, device=device),
-                    torch.zeros(self.n_layers << 1 if self.bidirectional else self.n_layers, batch_size, self.out_size, device=device))
+        (h0, c0) = (
+        torch.randn(self.n_layers << 1 if self.bidirectional else self.n_layers, batch_size, self.hidden_size,
+                    device=device),
+        torch.randn(self.n_layers << 1 if self.bidirectional else self.n_layers, batch_size, self.hidden_size,
+                    device=device))
+
         if self.rnn_type == "lstm":
-            return (h0,c0)
+            return (h0, c0)
         return h0
 
