@@ -2,9 +2,8 @@ import math
 import torch
 import torch.nn as nn
 from typing import Optional, Tuple
-
+from torch import Tensor
 Past = Tuple[torch.Tensor, torch.Tensor]
-
 
 
 class LauongAttention(nn.Module):
