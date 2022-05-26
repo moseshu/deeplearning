@@ -17,6 +17,20 @@ class BahdanauDecoder(nn.Module):
                  rnn_type='lstm',
                  drop_prob=0,
                  bidirectional=False):
+        """
+
+        :param vocab_size: 词的大小
+        :param emb_dim: 词向量纬度大小
+        :param hidden_enc_size:
+        :param hidden_dec_size:
+        :param n_layers:
+        :param rnn_type:
+        :param drop_prob:
+        :param bidirectional:
+        References
+            - https://github.com/lukysummer/Bahdanau-Attention-in-Pytorch/blob/master/Encoder.py,
+            - https://blog.floydhub.com/attention-mechanism/
+        """
         super(BahdanauDecoder, self).__init__()
         self.vocab_size = vocab_size
         self.embedding = nn.Embedding(vocab_size, emb_dim)
