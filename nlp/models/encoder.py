@@ -68,7 +68,7 @@ class EncoderRNNS(nn.Module):
         # Pass the embedded word vectors into LSTM and return all outputs
 
         output, hidden = self.rnn(embedded, hidden)
-        print(output.shape)
+
         output = self.dropout(self.fc(output))
         return output, hidden
 
@@ -82,4 +82,7 @@ class EncoderRNNS(nn.Module):
         if self.rnn_type == "lstm":
             return (h0, c0)
         return h0
+
+
+
 
