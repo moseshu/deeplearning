@@ -1,10 +1,11 @@
 import torch.nn as nn
 import torch
-import torch.nn.functional as F
 from torch import Tensor
 from encoder import EncoderRNNS
-from typing import Tuple
 from nlp.attention.attention import LauongAttention
+import random
+
+
 class BahdanauDecoder(nn.Module):
     supported_rnns = {
         'lstm': nn.LSTM,
@@ -60,7 +61,7 @@ class BahdanauDecoder(nn.Module):
         """
         ######################## 1. TARGET EMBEDDINGS #########################
         target = target.unsqueeze(1)  # [b, 1] : single word
-        print(target)
+
         embedded_trg = self.embedding(target)  # [batch, 1, emb_size]
 
         ################## 2. CALCULATE ATTENTION WEIGHTS #####################
@@ -84,3 +85,4 @@ class BahdanauDecoder(nn.Module):
                                  ], dim=1)
         output = self.classfier(final_input)  # [batch, target_vocab_size]
         return output, hiden_dec, att_weights
+
