@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from torch import Tensor
 from encoder import EncoderRNNS
 from typing import Tuple
-from ..attention.attention import LauongAttention
+from nlp.attention.attention import LauongAttention
 class BahdanauDecoder(nn.Module):
     supported_rnns = {
         'lstm': nn.LSTM,
@@ -84,4 +84,3 @@ class BahdanauDecoder(nn.Module):
                                  ], dim=1)
         output = self.classfier(final_input)  # [batch, target_vocab_size]
         return output, hiden_dec, att_weights
-
