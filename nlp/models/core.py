@@ -66,44 +66,6 @@ class Gelu_New(nn.Module):
         return 0.5 * x * (1 + torch.tanh(math.sqrt(2 / math.pi) * (x + 0.044715 * torch.pow(x, 3))))
 
 
-class FutureMask(nn.Module):
-    """
-    Tensor          Type            Shape
-    ===========================================================================
-    input           long            (..., seq_len)
-    ---------------------------------------------------------------------------
-    output          float           (..., seq_len, key_len)
-    ===========================================================================
-    """
-
-    def __init__(self, idx=0, max_len=1024, future=True):
-        super(FutureMask, self).__init__()
-        self.max_len = max_len
-        self.idx = idx
-        self.future = future
-    def forward(self, query: Tensor, key: Tensor = None) -> Tensor:
-        # future
-        bias = torch.tril(torch.ones((self.max_len, self.max_len), dtype=torch.uint8))
-        query_len = query.size(-1)
-        key_len = key.size(-2) if key is not None else query_len
-        mask = bias[key_len - query_len:key_len, :key_len]
-        mask = mask.repeat(query.size(0), 1, 1)
-
-        # pad
-        is_pad = (query == self.idx).unsqueeze(-2)
-        print(is_pad.shape)
-        key_pad = torch.zeros(query.size()[:-1] + (key_len - query_len,),dtype=torch.bool).unsqueeze(-2)
-        pad_mask = torch.cat([is_pad, key_pad], dim=-1)
-
-        pad_mask = pad_mask.repeat(1,query_len,1)
-        print(pad_mask.shape)
-        if self.future:
-            mask = pad_mask + (mask == 0)
-        else:
-            mask = pad_mask
-        return mask
-
-
 ACT2FN = {
     "relu": F.relu,
     "swish": Swish(),
@@ -111,3 +73,4 @@ ACT2FN = {
     "tanh": F.tanh,
     "glue_new": Gelu_New()
 }
+
