@@ -15,7 +15,7 @@ class EncoderRNNS(nn.Module):
         'rnn': nn.RNN,
     }
 
-    def __init__(self, vcab_size, hidden_size,
+    def __init__(self, vocab_size, hidden_size,
                  out_size,
                  n_layers=1,
                  drop_prob=0,
@@ -44,7 +44,7 @@ class EncoderRNNS(nn.Module):
         self.rnn_type = rnn_type.lower()
         self.bidirectional = bidirectional
         self.out_size = out_size
-        self.embedding = nn.Embedding(vcab_size, hidden_size)
+        self.embedding = nn.Embedding(vocab_size, hidden_size)
         rnn_cell = self.supported_rnns[rnn_type.lower()]
         self.rnn = rnn_cell(
             input_size=hidden_size,
@@ -84,5 +84,13 @@ class EncoderRNNS(nn.Module):
         return h0
 
 
+if __name__ == '__main__':
+    lstm = EncoderRNNS(vcab_size=10, hidden_size=64, out_size=128, n_layers=2, rnn_type="gru", bidirectional=False)
+    input = torch.randint(0, 8, (3, 5))
+
+    hidden = lstm.init_hidden(3)
+    print(hidden.shape)
+    output, hidden1 = lstm(input, hidden)
+    print(hidden1.shape)
 
 

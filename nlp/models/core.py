@@ -7,8 +7,7 @@ import math
 
 class LinearTransition(nn.Module):
     def __init__(self, embed_dim, out_dim):
-        self.embed_dim = embed_dim
-        self.out_dim = out_dim
+        super(LinearTransition, self).__init__()
         self.fc = nn.Linear(embed_dim, out_dim)
 
     def forward(self, x):

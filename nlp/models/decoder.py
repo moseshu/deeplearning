@@ -2,8 +2,8 @@ import torch.nn as nn
 import torch
 from torch import Tensor
 from encoder import EncoderRNNS
-from nlp.attention.attention import LauongAttention
-import random
+from nlp.attention.attention import LauongAttention, AttentionLayer, Past
+
 
 
 class BahdanauDecoder(nn.Module):
