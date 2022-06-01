@@ -8,7 +8,7 @@ class PadFutureMask(nn.Module):
     ===========================================================================
     input           long            (..., seq_len)
     ---------------------------------------------------------------------------
-    output          float           (..., seq_len, key_len)
+    output          float           (..., seq_len, key_len + 1)
     ===========================================================================
     """
 
@@ -21,7 +21,7 @@ class PadFutureMask(nn.Module):
         # future
         bias = torch.tril(torch.ones((self.max_len, self.max_len), dtype=torch.uint8))
         query_len = query.size(-1)
-        key_len = key.size(-2) if key is not None else query_len
+        key_len = key.size(-2) + 1 if key is not None else query_len
         mask = bias[key_len - query_len:key_len, :key_len]
         mask = mask.repeat(query.size(0), 1, 1)
 
@@ -31,7 +31,7 @@ class PadFutureMask(nn.Module):
         key_pad = torch.zeros(query.size()[:-1] + (key_len - query_len,),dtype=torch.bool).unsqueeze(-2)
         pad_mask = torch.cat([is_pad, key_pad], dim=-1)
 
-        pad_mask = pad_mask.repeat(1,query_len,1)
+        pad_mask = pad_mask.repeat(1, query_len, 1)
 
         if self.future:
             mask = pad_mask + (mask == 0)
