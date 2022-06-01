@@ -36,7 +36,7 @@ class TransformerBlock(nn.Module):
         x, layer_past = self.attn(a, a, a, layer_past, mask)
         x = x + a
         x = x + self.mlp(self.ln_ff(x))
-        return x if self.training else x, layer_past
+        return x if self.training else (x, layer_past)
 
 
 class GTP2Model(nn.Module):
@@ -74,7 +74,6 @@ class GTP2Model(nn.Module):
                 use_grad_ckpt: bool = False):
         past_len = layer_past[0][0].size(-2) if layer_past is not None else 0
         past_key = layer_past[-1][0] if layer_past is not None else None
-        print(input_ids)
         x = self.wte(input_ids) + self.wpe(input_ids, past_len)
         mask = self.future(input_ids, past_key)
 
@@ -93,7 +92,9 @@ class GTP2Model(nn.Module):
         logits = self.out(hidden_state)
 
         if labels is not None:
-            loss = self.loss_fn(logits.view(-1, logits.size(-1)), labels.view(-1))
+            shift_logits = logits[..., :-1, :].contiguous()
+            shift_labels = labels[..., 1:].contiguous()
+            loss = self.loss_fn(shift_logits.view(-1, logits.size(-1)), shift_labels.view(-1))
             return loss
         return logits, present
 
