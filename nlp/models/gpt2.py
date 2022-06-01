@@ -2,13 +2,13 @@ import copy
 import torch
 import torch.nn as nn
 from torch import Tensor
-from feedforward import FeedForward, ACT2FN
+from nlp.models.feedforward import FeedForward, ACT2FN
 from typing import Optional
-from embedding import PositionalEmbedding
-from masking import PadFutureMask
+from nlp.models.embedding import PositionalEmbedding
+from nlp.models.masking import PadFutureMask
 from functools import partial
 from typing import Optional, Tuple, List, Union
-from core import LinearTransition
+from nlp.models.core import LinearTransition
 from nlp.attention.attention import AttentionLayer, Past
 
 
@@ -45,7 +45,7 @@ class GTP2Model(nn.Module):
                  idx=0,
                  max_len=1024,
                  heads=12, rate=4, dropout=0.1,
-                 bidiresctional=True):
+                 future=True):
         super(GTP2Model, self).__init__()
         block = TransformerBlock(d_model=d_model, n_head=heads, rate=rate, dropout=dropout, activation="gelu")
         self.transformers = nn.ModuleList([copy.deepcopy(block) for _ in range(n_layers)])
@@ -55,7 +55,7 @@ class GTP2Model(nn.Module):
         self.out = nn.Linear(d_model, vocab_size, bias=False)
         self.loss_fn = nn.CrossEntropyLoss()
 
-        self.future = PadFutureMask(idx=idx, max_len=max_len, future=bidiresctional)
+        self.future = PadFutureMask(idx=idx, max_len=max_len, future=future)
 
     def init_weights(self):
         self.out.weight = self.wte.weight

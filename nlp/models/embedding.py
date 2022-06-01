@@ -26,13 +26,3 @@ class PositionalEmbedding(nn.Module):
 
 
 
-
-if __name__ == '__main__':
-    a = PositionalEmbedding(1024, 10)
-    input_ids = torch.randint(1000, (1,1))
-    print(input_ids)
-    # input_ids = input_ids.view(-1, input_ids.size()[-1])
-
-    b = a(input_ids, 1)
-    print(b.shape)
-    print(input_ids.shape)

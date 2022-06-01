@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
 from torch import Tensor
-from core import LinearTransition
+from nlp.models.core import LinearTransition,ACT2FN
 import torch.nn.functional as F
-from core import ACT2FN
+
 
 
 class FeedForward(nn.Module):
