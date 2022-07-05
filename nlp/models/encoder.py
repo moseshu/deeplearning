@@ -1,5 +1,8 @@
 import torch.nn as nn
 import torch
+from nlp.attention.attention import MultiHeadAttention
+from nlp.models.embedding import PositionalEmbedding
+import copy
 
 """
 @author Moses
@@ -74,14 +77,68 @@ class EncoderRNNS(nn.Module):
 
     def init_hidden(self, batch_size=1, device="cpu"):
         (h0, c0) = (
-        torch.randn(self.n_layers << 1 if self.bidirectional else self.n_layers, batch_size, self.hidden_size,
-                    device=device),
-        torch.randn(self.n_layers << 1 if self.bidirectional else self.n_layers, batch_size, self.hidden_size,
-                    device=device))
+            torch.randn(self.n_layers << 1 if self.bidirectional else self.n_layers, batch_size, self.hidden_size,
+                        device=device),
+            torch.randn(self.n_layers << 1 if self.bidirectional else self.n_layers, batch_size, self.hidden_size,
+                        device=device))
 
         if self.rnn_type == "lstm":
             return (h0, c0)
         return h0
+
+
+class EncoderLayer(nn.Module):
+    def __init__(self, units, d_model, dropout=0.1, heads=8):
+        """
+
+        :param units: 线性变换中间过程
+        :param d_model: 最终的输出的向量维度
+        :param dropout:
+        :param heads: 多头数
+        """
+        super(EncoderLayer, self).__init__()
+
+        self.self_attention = MultiHeadAttention(heads, dropout=dropout)
+        self.drop = nn.Dropout(dropout)
+        self.relu = nn.ReLU()
+        self.norm_1 = nn.LayerNorm(d_model, eps=1e-6)
+        self.norm_2 = nn.LayerNorm(d_model, eps=1e-6)
+        self.linear1 = nn.Linear(self.d_model, self.units)
+        self.linear2 = nn.Linear(self.units, self.d_model)
+
+    def forward(self, x, mask=None):
+        attention = self.self_attention(x, x, x, mask=mask)
+        attention = nn.Dropout(self.dropout)(attention)
+        attention = torch.add(x, attention)
+        attention = self.norm_1(attention)
+
+        outputs = self.relu(self.linear1(attention))
+        outputs = self.drop(self.linear2(outputs))
+        outputs = self.norm_2(torch.add(attention, outputs))
+        return outputs
+
+
+class TextEncoder(nn.Module):
+
+    def __init__(self, vocab_size, num_layers, units, d_model, num_heads, max_seq, dropout=0.1):
+        super(TextEncoder, self).__init__()
+        self.embedding = nn.Embeddings(vocab_size, d_model)
+        self.positional_encoding = PositionalEmbedding(max_seq, d_model)
+        self.layers = self.clones(EncoderLayer(units, d_model, dropout, num_heads), num_layers)
+        self.dropout_layer = nn.Dropout(dropout)
+
+
+    def clones(self, module, N):
+        "Produce N identical layers."
+        return nn.ModuleList([copy.deepcopy(module) for _ in range(N)])
+
+    def forward(self, x, mask=None):
+        embedding = self.positional_encoding(x) + self.embedding(x)  # [bs,max_seq,d_model]
+        x = self.dropout_layer(embedding)
+        for layer in self.layers:
+            x = layer(x, mask)
+
+        return x
 
 
 if __name__ == '__main__':
@@ -92,5 +149,3 @@ if __name__ == '__main__':
     print(hidden.shape)
     output, hidden1 = lstm(input, hidden)
     print(hidden1.shape)
-
-
