@@ -49,7 +49,7 @@ class MultiHeadAttention(BaseAttention):
     v               float           (..., kv_len, dims)
     mask            bool            (..., query_len, kv_len)
     ---------------------------------------------------------------------------
-    output          float           (..., query_len, dims)
+    output          float           (bs, query_len, dims)
     ===========================================================================
     """
 
