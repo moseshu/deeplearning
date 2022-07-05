@@ -25,7 +25,7 @@ class TransformerBlock(nn.Module):
             nn.Linear(emb_dim, dim_linear_block),
             activation(),
             nn.Dropout(dropout),
-            nn.LayerNorm(dim_linear_block, emb_dim),
+            nn.Linear(dim_linear_block, emb_dim),
             nn.Dropout(dropout)
         )
         self.dim_head = int(emb_dim / heads) if dim_head is None else dim_head
@@ -34,22 +34,24 @@ class TransformerBlock(nn.Module):
         self.W_0 = nn.Linear(_dim, emb_dim, bias=False)
 
     def forward(self, x: torch.Tensor, mask=None) -> torch.Tensor:
-        assert x.dim == 3 and x.shape[-1] == self.emb_dim  # [batch, tokens, _dim*3*heads]
-        x = self.to_qkv(x)
-        q, k, v = torch.chunk(x, chunks=3, dim=-1)
+        assert x.dim() == 3 and x.shape[-1] == self.emb_dim  # [batch, tokens, _dim*3*heads]
+
+        qkvx = self.to_qkv(x)
+        q, k, v = torch.chunk(qkvx, chunks=3, dim=-1)
 
         att = self.attention(q, k, v, mask)  # [bs,tokens, _dim]
         y = x + self.W_0(att)
         return self.norm_l2(self.linear(y) + y)  # [bs,tokens, emb_dim]
 
 
-class TransformerEncoder(nn.Module):
+class ImgTransformerEncoder(nn.Module):
     def __init__(self, emb_dim, blocks=6, heads=8, dim_head=None, dim_linear_block=1024, dropout=0):
-        super(TransformerEncoder, self).__init__()
+        super(ImgTransformerEncoder, self).__init__()
         self.layers = nn.ModuleList(
             [TransformerBlock(emb_dim, heads, dim_head, dim_linear_block, dropout) for _ in range(blocks)])
 
     def forward(self, x: torch.Tensor, mask=None) -> torch.Tensor:
         for layer in self.layers:
             x = layer(x, mask)
+
         return x

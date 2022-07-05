@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from img_encoder import TransformerEncoder
+from img_encoder import ImgTransformerEncoder
 
 
 class ViT(nn.Module):
@@ -19,7 +19,7 @@ class ViT(nn.Module):
                  ):
         super(ViT, self).__init__()
         assert img_dim % patch_dim == 0, f'patch size {patch_dim} not divisible'
-        self.p = patch_dim,
+        self.p = patch_dim
         self.classification = classification
         tokens = (img_dim // patch_dim) ** 2
         self.token_dim = in_channels * (patch_dim ** 2)
@@ -28,7 +28,7 @@ class ViT(nn.Module):
         self.project_patches = nn.Linear(self.token_dim, dim)
         self.emb_dropout = nn.Dropout(dropout)
 
-        self.transformer = TransformerEncoder(dim, blocks=blocks, heads=heads,
+        self.transformer = ImgTransformerEncoder(dim, blocks=blocks, heads=heads,
                                               dim_head=self.dim_head,
                                               dim_linear_block=dim_linear_block,
                                               dropout=dropout)
@@ -46,13 +46,14 @@ class ViT(nn.Module):
             batch: batch size
         Returns: cls token expanded to the batch size
         """
-        return self.cls_token.expand([batch, -1, -1])
+        return self.CLS_TOKEN.expand([batch, -1, -1])
 
     def forward(self, img: torch.Tensor, mask=None):
         assert img.dim() == 4
-        batch_size, channels, H, W, = img.shape  # [bs.c,h,w]
-        patch_x = H / self.p
-        patch_y = W / self.p
+        (batch_size, channels, H, W) = img.shape  # [bs,c,h,w]
+        print(self.p)
+        patch_x = H // self.p
+        patch_y = W // self.p
 
         img_patches = img.contiguous().view((batch_size, patch_x * patch_y, channels * (self.p ** 2)))
         # project patches with linear layer + add pos emb
@@ -70,3 +71,6 @@ class ViT(nn.Module):
             return self.out(y[:, 0, :])
         else:
             return y
+
+
+
