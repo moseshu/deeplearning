@@ -35,8 +35,6 @@ loss_t = cross_entropy_loss(logits, labels, axis=1)
 loss = (loss_i + loss_t)/2
 """
 
-from transformers.models.clip.modeling_clip import CLIPModel
-
 
 class CLIP(nn.Module):
     def __init__(self, config: CLIPConfig):
@@ -76,23 +74,27 @@ class CLIP(nn.Module):
         image_encode = self.image_encoder(image, image_task)  # [bs,patchs, dim]
         text_encode = self.text_encoder(text, text_mask)  # [bs,max_seq,text_d_model]
 
-        image_out = image_encode.view((image_encode.shape[0], -1))
-        text_out = text_encode.view((text_encode.shape[0], -1))
+        image_out = image_encode[:, 0, :]
+        text_out = text_encode[:, 0, :]
 
         I_E = torch.einsum("bi,ij->bj", [image_out, self.W_I])
         T_E = torch.einsum("bi,ij->bj", [text_out, self.W_T])
         image_E = self.norm_l1(I_E)
         text_E = self.norm_l2(T_E)
 
-
         logit_scale = self.logit_scale.exp()
 
-        logits_per_image = torch.einsum("bi,ik->bk", [image_E, text_E]) * logit_scale
+        logits_per_text = torch.einsum("bi,ik->bk", [text_E, image_E]) * logit_scale
 
-        logits_per_text = logits_per_image.T
-        loss = clip_loss(logits_per_image)
-
-        return logits_per_text, logits_per_image, loss
+        logits_per_image = logits_per_text.T
+        loss = clip_loss(logits_per_text)
+        out_put = {"logits_per_text": logits_per_text,
+                   "logits_per_image": logits_per_image,
+                   "loss": loss,
+                   "vision_model_output": image_out,
+                   "text_model_output": text_out
+                   }
+        return out_put
 
 
 if __name__ == '__main__':
