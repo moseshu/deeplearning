@@ -2,6 +2,7 @@ from nlp.models.embedding import PositionalEmbedding
 from nlp.models.gpt2 import GTP2Model
 from nlp.models.masking import PadFutureMask
 import torch
+from nlp.models.encoder import TextEncoder
 
 
 def test_gpt2_general():
@@ -43,6 +44,19 @@ def test_masking():
     assert y.shape == (2, 5, 10)
     z = mask(x)
     assert z.shape == (2, 5, 5)
+
+
+def test_image():
+    from torchvision import models
+    mobile_v3 = models.mobilenet_v3_small(pretrained=True)
+
+
+def test_text_encoder():
+    x = torch.randint(0, 100, (3, 7))
+    # encoder = EncoderLayer(units=120, d_model=768, heads=8)
+    encoder = TextEncoder(vocab_size=99, num_layers=4, num_heads=8, units=128, d_model=768, max_seq=7)
+    a = encoder(x)
+    assert a.shape == (3, 7, 768)
 
 
 if __name__ == '__main__':

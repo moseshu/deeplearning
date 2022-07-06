@@ -103,15 +103,16 @@ class EncoderLayer(nn.Module):
         self.relu = nn.ReLU()
         self.norm_1 = nn.LayerNorm(d_model, eps=1e-6)
         self.norm_2 = nn.LayerNorm(d_model, eps=1e-6)
-        self.linear1 = nn.Linear(self.d_model, self.units)
-        self.linear2 = nn.Linear(self.units, self.d_model)
+        self.linear1 = nn.Linear(d_model, units)
+        self.linear2 = nn.Linear(units, d_model)
         self.Q = nn.Linear(d_model, d_model)
         self.K = nn.Linear(d_model, d_model)
         self.V = nn.Linear(d_model, d_model)
 
     def forward(self, x, mask=None):
+
         attention = self.self_attention(self.Q(x), self.K(x), self.V(x), mask=mask)
-        attention = nn.Dropout(self.dropout)(attention)
+        attention = self.drop(attention)
         attention = torch.add(x, attention)
         attention = self.norm_1(attention)
 
@@ -125,17 +126,17 @@ class TextEncoder(nn.Module):
 
     def __init__(self, vocab_size, num_layers, units, d_model, num_heads, max_seq, dropout=0.1):
         super(TextEncoder, self).__init__()
-        self.embedding = nn.Embeddings(vocab_size, d_model)
+
+        self.embedding = nn.Embedding(vocab_size, d_model)
         self.positional_encoding = PositionalEmbedding(max_seq, d_model)
         self.layers = self.clones(EncoderLayer(units, d_model, dropout, num_heads), num_layers)
         self.dropout_layer = nn.Dropout(dropout)
-
 
     def clones(self, module, N):
         "Produce N identical layers."
         return nn.ModuleList([copy.deepcopy(module) for _ in range(N)])
 
-    def forward(self, x, mask=None):
+    def forward(self, x: torch.Tensor, mask=None):
         # x.shape = [bs, max_seq]
         embedding = self.positional_encoding(x) + self.embedding(x)  # [bs,max_seq,d_model]
         x = self.dropout_layer(embedding)
@@ -144,3 +145,18 @@ class TextEncoder(nn.Module):
 
         return x
 
+
+if __name__ == '__main__':
+    # lstm = EncoderRNNS(vcab_size=10, hidden_size=64, out_size=128, n_layers=2, rnn_type="gru", bidirectional=False)
+    # input = torch.randint(0, 8, (3, 5))
+    #
+    # hidden = lstm.init_hidden(3)
+    # print(hidden.shape)
+    # output, hidden1 = lstm(input, hidden)
+    # print(hidden1.shape)
+
+    x = torch.randint(0,100,(3,7))
+    # encoder = EncoderLayer(units=120, d_model=768, heads=8)
+    encoder = TextEncoder(vocab_size=99,num_layers=4,num_heads=8,units=128,d_model=768,max_seq=7)
+    a = encoder(x)
+    print(a.shape)
