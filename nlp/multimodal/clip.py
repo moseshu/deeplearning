@@ -63,9 +63,9 @@ class CLIP(nn.Module):
             max_seq=config.text_max_seq,
             dropout=config.text_drop
         )
-        tokens = (config.img_dim // config.patch_dim) ** 2
-        self.W_I = nn.Parameter(torch.randn(tokens * config.dim, config.img_text_dim))
-        self.W_T = nn.Parameter(torch.randn(config.text_d_model * config.text_max_seq, config.img_text_dim))
+
+        self.W_I = nn.Parameter(torch.randn(config.dim, config.img_text_dim))
+        self.W_T = nn.Parameter(torch.randn(config.text_d_model, config.img_text_dim))
         self.norm_l1 = nn.LayerNorm(config.img_text_dim)
         self.norm_l2 = nn.LayerNorm(config.img_text_dim)
 
@@ -96,18 +96,3 @@ class CLIP(nn.Module):
                    }
         return out_put
 
-
-if __name__ == '__main__':
-    config = CLIPConfig()
-
-    model = ViT(img_dim=256, in_channels=3, patch_dim=16, num_classes=None, dim=512, classification=False)
-    x = torch.rand(2, 3, 256, 256)
-    y = model(x)  # [2,10]
-    print(y.shape)  # batch, classes
-
-    a = torch.tensor([[1, 2, -1], [2, 4, -1]])
-    b = torch.tensor([[2, 1, -1], [4, 3, -1]])
-    c = torch.einsum("bi,ik->bk", [a, b.T])
-    print(c)
-    print(np.exp(1))
-    print(torch.exp(torch.tensor([1])))
