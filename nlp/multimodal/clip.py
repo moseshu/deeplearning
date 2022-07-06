@@ -4,6 +4,7 @@ import torch.nn as nn
 from vitransformer import ViT
 from nlp.models.encoder import TextEncoder
 from config import CLIPConfig
+from loss import clip_loss
 
 """
 
@@ -34,11 +35,13 @@ loss_t = cross_entropy_loss(logits, labels, axis=1)
 loss = (loss_i + loss_t)/2
 """
 
+from transformers.models.clip.modeling_clip import CLIPModel
+
 
 class CLIP(nn.Module):
     def __init__(self, config: CLIPConfig):
         super(CLIP, self).__init__()
-        self.T = config.T
+        self.logit_scale = nn.Parameter(torch.ones([]))
         self.image_encoder = ViT(
             img_dim=config.img_dim,
             in_channels=config.in_channels,
@@ -70,8 +73,8 @@ class CLIP(nn.Module):
 
     def forward(self, image: torch.Tensor, text: torch.Tensor, text_mask=None, image_task=None):
         # image.shape = [bs,c,h,w]  text.shape = [bs,max_seq]
-        image_encode = self.image_encoder(image)  # [bs,patchs, dim]
-        text_encode = self.text_encoder(text)  # [bs,max_seq,text_d_model]
+        image_encode = self.image_encoder(image, image_task)  # [bs,patchs, dim]
+        text_encode = self.text_encoder(text, text_mask)  # [bs,max_seq,text_d_model]
 
         image_out = image_encode.view((image_encode.shape[0], -1))
         text_out = text_encode.view((text_encode.shape[0], -1))
@@ -80,8 +83,29 @@ class CLIP(nn.Module):
         T_E = torch.einsum("bi,ij->bj", [text_out, self.W_T])
         image_E = self.norm_l1(I_E)
         text_E = self.norm_l2(T_E)
-        T = torch.tensor(self.T)
-
-        logits = torch.einsum("bi,ik->bk", [image_E, text_E])*torch.exp(T)
 
 
+        logit_scale = self.logit_scale.exp()
+
+        logits_per_image = torch.einsum("bi,ik->bk", [image_E, text_E]) * logit_scale
+
+        logits_per_text = logits_per_image.T
+        loss = clip_loss(logits_per_image)
+
+        return logits_per_text, logits_per_image, loss
+
+
+if __name__ == '__main__':
+    config = CLIPConfig()
+
+    model = ViT(img_dim=256, in_channels=3, patch_dim=16, num_classes=None, dim=512, classification=False)
+    x = torch.rand(2, 3, 256, 256)
+    y = model(x)  # [2,10]
+    print(y.shape)  # batch, classes
+
+    a = torch.tensor([[1, 2, -1], [2, 4, -1]])
+    b = torch.tensor([[2, 1, -1], [4, 3, -1]])
+    c = torch.einsum("bi,ik->bk", [a, b.T])
+    print(c)
+    print(np.exp(1))
+    print(torch.exp(torch.tensor([1])))
