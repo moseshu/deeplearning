@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch
 from nlp.attention.attention import MultiHeadAttention
-from nlp.models.embedding import PositionalEmbedding
+from nlp.models.embedding import PositionalEmbedding,PositionalEncoding
 import copy
 
 """
@@ -122,6 +122,9 @@ class EncoderLayer(nn.Module):
         return outputs
 
 
+
+
+
 class TextEncoder(nn.Module):
 
     def __init__(self, vocab_size, num_layers, units, d_model, num_heads, max_seq, dropout=0.1):
@@ -144,6 +147,7 @@ class TextEncoder(nn.Module):
             x = layer(x, mask)
 
         return x
+
 
 
 if __name__ == '__main__':

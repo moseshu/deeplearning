@@ -2,10 +2,9 @@ import torch.nn as nn
 import torch
 from torch import Tensor
 from encoder import EncoderRNNS
-from nlp.attention.attention import LauongAttention, AttentionLayer, Past
-
-
-
+from nlp.attention.attention import LauongAttention, AttentionLayer, Past, MultiHeadAttention
+from embedding import PositionalEncoding
+import copy
 class BahdanauDecoder(nn.Module):
     supported_rnns = {
         'lstm': nn.LSTM,
@@ -85,4 +84,34 @@ class BahdanauDecoder(nn.Module):
                                  ], dim=1)
         output = self.classfier(final_input)  # [batch, target_vocab_size]
         return output, hiden_dec, att_weights
+
+
+class DecoderLayerChat(nn.Module):
+    def __init__(self, units, d_model, dropout=0.1, heads=8):
+        super(DecoderLayerChat, self).__init__()
+        self.attention1 = MultiHeadAttention(heads, dropout=dropout)
+        self.attention2 = MultiHeadAttention(heads, dropout=dropout)
+        self.units = units
+        self.dropout = nn.Dropout(dropout)
+        self.d_model = d_model
+        self.relu = nn.ReLU()
+        self.norm = nn.LayerNorm(d_model, eps=1e-6)
+        self.linear1 = nn.Linear(d_model, units)
+        self.linear2 = nn.Linear(units, d_model)
+        self.Q = nn.Linear(d_model, d_model)
+        self.K = nn.Linear(d_model, d_model)
+        self.V = nn.Linear(d_model, d_model)
+
+    def forward(self, inputs, enc_outputs, look_ahead_mask=None, padding_mask=None):
+        attention1 = self.attention1(q=self.Q(inputs), k=self.K(inputs), v=self.V(inputs), mask=look_ahead_mask)
+        attention1 = self.norm(torch.add(attention1, inputs)) # 参差连接
+
+        attention2 = self.attention2(q=attention1, k=enc_outputs, v=enc_outputs, mask=padding_mask) # decoder的输入跟encoder的输出做attention
+        attention2 = self.dropout(attention2)
+        attention2 = self.norm(attention2 + attention1)
+        outputs = self.relu(self.linear1(attention2))
+        outputs = self.dropout(self.linear2(outputs))
+        outputs = self.norm(outputs + attention2)
+        return outputs
+
 

@@ -3,6 +3,7 @@ from nlp.models.gpt2 import GTP2Model
 from nlp.models.masking import PadFutureMask
 import torch
 from nlp.models.encoder import TextEncoder
+from nlp.attention.attention import MultiHeadAttention
 
 
 def test_gpt2_general():
@@ -59,8 +60,24 @@ def test_text_encoder():
     assert a.shape == (3, 7, 768)
 
 
+def test_multi_head_att():
+    layer = MultiHeadAttention(heads=2)
+    q = torch.zeros((10, 16))
+    k = torch.zeros((20, 16))
+    v = torch.zeros((20, 32))
+    out = layer(q, k, v)
+    print(out.shape == (10, 32))
+    q = torch.zeros((4, 10, 16))
+    k = torch.zeros((4, 20, 16))
+    v = torch.zeros((4, 20, 32))
+    mask = torch.zeros((4, 10, 20)).bool()
+
+    print(layer(q, k, v, mask).shape)
+
+
 if __name__ == '__main__':
     # test_gpt2_general()
     # test_gpt2_train()
     # test_positional_embedding()
-    test_masking()
+    # test_masking()
+    test_multi_head_att()

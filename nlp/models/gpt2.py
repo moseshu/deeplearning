@@ -2,8 +2,8 @@ import copy
 import torch
 import torch.nn as nn
 from torch import Tensor
-from nlp.models.feedforward import FeedForward, ACT2FN
-from typing import Optional
+from nlp.models.feedforward import FeedForward
+
 from nlp.models.embedding import PositionalEmbedding
 from nlp.models.masking import PadFutureMask
 from functools import partial
@@ -20,6 +20,7 @@ class TransformerBlock(nn.Module):
     ---------------------------------------------------------------------------
     output          float           (..., seq_len, d_model) or (..., seq_len, d_model),(k, v)
     ===========================================================================
+    Refrence:
     """
 
     def __init__(self, d_model, n_head=12, dropout=0.1, activation="gelu", rate=4):
