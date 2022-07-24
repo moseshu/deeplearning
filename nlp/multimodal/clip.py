@@ -96,3 +96,18 @@ class CLIP(nn.Module):
                    }
         return out_put
 
+
+if __name__ == '__main__':
+    config = CLIPConfig()
+
+    model = ViT(img_dim=256, in_channels=3, patch_dim=16, num_classes=None, dim=512, classification=False)
+    x = torch.rand(2, 3, 256, 256)
+    y = model(x)  # [2,10]
+    print(y.shape)  # batch, classes
+
+    a = torch.tensor([[1, 2, -1], [2, 4, -1]])
+    b = torch.tensor([[2, 1, -1], [4, 3, -1]])
+    c = torch.einsum("bi,ik->bk", [a, b.T])
+    print(c)
+    print(np.exp(1))
+    print(torch.exp(torch.tensor([1])))

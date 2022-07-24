@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from nlp.attention.attention import MultiHeadAttention
+from nlp.attention.attention import AttentionLayer
 
 
 class TransformerBlock(nn.Module):
@@ -17,7 +17,7 @@ class TransformerBlock(nn.Module):
         """
         super(TransformerBlock, self).__init__()
         self.emb_dim = emb_dim
-        self.attention = MultiHeadAttention(heads=heads, dropout=dropout)
+
         self.drop = nn.Dropout(dropout)
         self.norm_l1 = nn.LayerNorm(emb_dim)
         self.norm_l2 = nn.LayerNorm(emb_dim)
@@ -30,6 +30,7 @@ class TransformerBlock(nn.Module):
         )
         self.dim_head = int(emb_dim / heads) if dim_head is None else dim_head
         _dim = self.dim_head * heads
+        self.attention = AttentionLayer(heads=heads, dims=_dim, dropout=dropout)
         self.to_qkv = nn.Linear(emb_dim, _dim * 3, bias=False)
         self.W_0 = nn.Linear(_dim, emb_dim, bias=False)
 
@@ -39,7 +40,7 @@ class TransformerBlock(nn.Module):
         qkvx = self.to_qkv(x)
         q, k, v = torch.chunk(qkvx, chunks=3, dim=-1)
 
-        att = self.attention(q, k, v, mask)  # [bs,tokens, _dim]
+        att, _ = self.attention(q, k, v, mask)  # [bs,tokens, _dim]
         y = x + self.W_0(att)
         return self.norm_l2(self.linear(y) + y)  # [bs,tokens, emb_dim]
 

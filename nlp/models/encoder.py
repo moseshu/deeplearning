@@ -1,6 +1,6 @@
 import torch.nn as nn
 import torch
-from nlp.attention.attention import MultiHeadAttention
+from nlp.attention.attention import MultiHeadAttention, AttentionLayer
 from nlp.models.embedding import PositionalEmbedding,PositionalEncoding
 import copy
 
@@ -98,20 +98,19 @@ class EncoderLayer(nn.Module):
         """
         super(EncoderLayer, self).__init__()
 
-        self.self_attention = MultiHeadAttention(heads, dropout=dropout)
+        self.self_attention = AttentionLayer(heads,d_model, dropout=dropout)
         self.drop = nn.Dropout(dropout)
         self.relu = nn.ReLU()
         self.norm_1 = nn.LayerNorm(d_model, eps=1e-6)
         self.norm_2 = nn.LayerNorm(d_model, eps=1e-6)
         self.linear1 = nn.Linear(d_model, units)
         self.linear2 = nn.Linear(units, d_model)
-        self.Q = nn.Linear(d_model, d_model)
-        self.K = nn.Linear(d_model, d_model)
-        self.V = nn.Linear(d_model, d_model)
+
+        self.linear = nn.Linear(d_model, d_model)
 
     def forward(self, x, mask=None):
 
-        attention = self.self_attention(self.Q(x), self.K(x), self.V(x), mask=mask)
+        attention, _ = self.self_attention(x, x,x, mask=mask)
         attention = self.drop(attention)
         attention = torch.add(x, attention)
         attention = self.norm_1(attention)
