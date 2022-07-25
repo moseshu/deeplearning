@@ -98,7 +98,7 @@ class EncoderLayer(nn.Module):
         """
         super(EncoderLayer, self).__init__()
 
-        self.self_attention = AttentionLayer(heads,d_model, dropout=dropout)
+        self.self_attention = AttentionLayer(heads, d_model, dropout=dropout)
         self.drop = nn.Dropout(dropout)
         self.relu = nn.ReLU()
         self.norm_1 = nn.LayerNorm(d_model, eps=1e-6)
@@ -106,11 +106,11 @@ class EncoderLayer(nn.Module):
         self.linear1 = nn.Linear(d_model, units)
         self.linear2 = nn.Linear(units, d_model)
 
-        self.linear = nn.Linear(d_model, d_model)
+
 
     def forward(self, x, mask=None):
 
-        attention, _ = self.self_attention(x, x,x, mask=mask)
+        attention, _ = self.self_attention(x, x, x, mask=mask)
         attention = self.drop(attention)
         attention = torch.add(x, attention)
         attention = self.norm_1(attention)
