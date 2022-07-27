@@ -252,3 +252,4 @@ if __name__ == '__main__':
     model = checkpoint['transformer']
     sentence = "你叫什么名字"
     predict(sentence, model=model)
+
