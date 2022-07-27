@@ -5,7 +5,7 @@ from encoder import EncoderRNNS
 from nlp.attention.attention import LauongAttention, AttentionLayer, Past, MultiHeadAttention
 from embedding import PositionalEncoding
 import copy
-
+from feedforward import FeedForward
 
 class BahdanauDecoder(nn.Module):
     supported_rnns = {
@@ -88,28 +88,26 @@ class BahdanauDecoder(nn.Module):
         return output, hiden_dec, att_weights
 
 
-class DecoderLayerChat(nn.Module):
-    def __init__(self, units, d_model, dropout=0.1, heads=8):
-        super(DecoderLayerChat, self).__init__()
-        self.attention1 = AttentionLayer(heads, d_model, dropout=dropout)
-        self.attention2 = AttentionLayer(heads, d_model, dropout=dropout)
-        self.units = units
-        self.dropout = nn.Dropout(dropout)
-        self.d_model = d_model
-        self.relu = nn.ReLU()
-        self.norm = nn.LayerNorm(d_model, eps=1e-6)
-        self.linear1 = nn.Linear(d_model, units)
-        self.linear2 = nn.Linear(units, d_model)
+class DecoderLayer(nn.Module):
+    """
+    References
+        https://github.com/fawazsammani/chatbot-transformer/blob/master/transformer%20chatbot.ipynb
+    """
+    def __init__(self, d_model, heads):
+        super(DecoderLayer, self).__init__()
+        self.layernorm = nn.LayerNorm(d_model)
+        self.self_multihead = AttentionLayer(heads, d_model)
+        self.src_multihead = AttentionLayer(heads, d_model)
+        self.feed_forward = FeedForward(d_model)
+        self.dropout = nn.Dropout(0.1)
 
-    def forward(self, inputs, enc_outputs, look_ahead_mask=None, padding_mask=None):
-        attention1, _ = self.attention1(q=inputs, k=inputs, v=inputs, mask=look_ahead_mask)
-        attention1 = self.norm(torch.add(attention1, inputs))  # 参差连接
-
-        attention2, _ = self.attention2(q=attention1, k=enc_outputs, v=enc_outputs,
-                                        mask=padding_mask)  # decoder的输入跟encoder的输出做attention
-        attention2 = self.dropout(attention2)
-        attention2 = self.norm(attention2 + attention1)
-        outputs = self.relu(self.linear1(attention2))
-        outputs = self.dropout(self.linear2(outputs))
-        outputs = self.norm(outputs + attention2)
-        return outputs
+    def forward(self, embeddings, encoded, src_mask, target_mask):
+        att_target_out, _ = self.self_multihead(embeddings, embeddings, embeddings, mask=target_mask)
+        query = self.dropout(att_target_out)
+        query = self.layernorm(query + embeddings)
+        en_den_att, _ = self.src_multihead(query, encoded, encoded, mask=src_mask)
+        interacted = self.dropout(en_den_att)
+        interacted = self.layernorm(interacted + query)
+        feed_forward_out = self.dropout(self.feed_forward(interacted))
+        decoded = self.layernorm(feed_forward_out + interacted)
+        return decoded

@@ -10,7 +10,6 @@ import sys
 lib_path = os.path.abspath(os.path.join(".."))
 sys.path.append(lib_path)
 
-
 class DataProcesser(Dataset):
     def __init__(self, first_seg, sencond_seg):
         super(DataProcesser, self).__init__()
@@ -26,8 +25,7 @@ class DataProcesser(Dataset):
         seg2 = self.sencond_seg[item]
 
         return (torch.tensor(seg1, dtype=torch.long),
-                torch.tensor(seg2[:-1], dtype=torch.long),
-                torch.tensor(seg2[1:], dtype=torch.long))
+                torch.tensor(seg2, dtype=torch.long))
 
 
 def load_token(dir):
@@ -95,7 +93,5 @@ def text_generate(dir, word_token_path, max_len=64):
 
 
 if __name__ == '__main__':
-    itd, vocab_size = text_generate("../../data", "../../data/words.json")
-    for i, (ques, answer, target) in enumerate(itd):
-        print(ques[:3])
-        print(answer[:3])
+    a = load_yaml_text("../../data/xianliao.yml")
+    print(a)

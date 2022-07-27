@@ -1,8 +1,9 @@
 import torch.nn as nn
 import torch
 from nlp.attention.attention import MultiHeadAttention, AttentionLayer
-from nlp.models.embedding import PositionalEmbedding,PositionalEncoding
+from nlp.models.embedding import PositionalEmbedding, PositionalEncoding
 import copy
+from feedforward import FeedForward
 
 """
 @author Moses
@@ -88,40 +89,25 @@ class EncoderRNNS(nn.Module):
 
 
 class EncoderLayer(nn.Module):
-    def __init__(self, units, d_model, dropout=0.1, heads=8):
-        """
-
-        :param units: 线性变换中间过程
-        :param d_model: 最终的输出的向量维度
-        :param dropout:
-        :param heads: 多头数
-        """
+    """
+     References:
+            https://github.com/fawazsammani/chatbot-transformer/blob/master/transformer%20chatbot.ipynb
+    """
+    def __init__(self, units, d_model, heads, dropout=0.1):
         super(EncoderLayer, self).__init__()
+        self.layernorm = nn.LayerNorm(d_model)
 
-        self.self_attention = AttentionLayer(heads, d_model, dropout=dropout)
-        self.drop = nn.Dropout(dropout)
-        self.relu = nn.ReLU()
-        self.norm_1 = nn.LayerNorm(d_model, eps=1e-6)
-        self.norm_2 = nn.LayerNorm(d_model, eps=1e-6)
-        self.linear1 = nn.Linear(d_model, units)
-        self.linear2 = nn.Linear(units, d_model)
+        self.self_multihead = AttentionLayer(heads, d_model, dropout=dropout)
+        self.feed_forward = FeedForward(d_model, middle_dim=units)
+        self.dropout = nn.Dropout(0.1)
 
-
-
-    def forward(self, x, mask=None):
-
-        attention, _ = self.self_attention(x, x, x, mask=mask)
-        attention = self.drop(attention)
-        attention = torch.add(x, attention)
-        attention = self.norm_1(attention)
-
-        outputs = self.relu(self.linear1(attention))
-        outputs = self.drop(self.linear2(outputs))
-        outputs = self.norm_2(torch.add(attention, outputs))
-        return outputs
-
-
-
+    def forward(self, embeddings, mask):
+        att_out, _ = self.self_multihead(embeddings, embeddings, embeddings, mask=mask)
+        interacted = self.dropout(att_out)
+        interacted = self.layernorm(interacted + embeddings)
+        feed_forward_out = self.dropout(self.feed_forward(interacted))
+        encoded = self.layernorm(feed_forward_out + interacted)
+        return encoded
 
 
 class TextEncoder(nn.Module):
@@ -131,7 +117,8 @@ class TextEncoder(nn.Module):
 
         self.embedding = nn.Embedding(vocab_size, d_model)
         self.positional_encoding = PositionalEmbedding(max_seq, d_model)
-        self.layers = self.clones(EncoderLayer(units, d_model, dropout, num_heads), num_layers)
+        self.layers = self.clones(EncoderLayer(units=units, d_model=d_model, heads=num_heads, dropout=dropout, ),
+                                  num_layers)
         self.dropout_layer = nn.Dropout(dropout)
 
     def clones(self, module, N):
@@ -148,7 +135,6 @@ class TextEncoder(nn.Module):
         return x
 
 
-
 if __name__ == '__main__':
     # lstm = EncoderRNNS(vcab_size=10, hidden_size=64, out_size=128, n_layers=2, rnn_type="gru", bidirectional=False)
     # input = torch.randint(0, 8, (3, 5))
@@ -158,8 +144,8 @@ if __name__ == '__main__':
     # output, hidden1 = lstm(input, hidden)
     # print(hidden1.shape)
 
-    x = torch.randint(0,100,(3,7))
+    x = torch.randint(0, 100, (3, 7))
     # encoder = EncoderLayer(units=120, d_model=768, heads=8)
-    encoder = TextEncoder(vocab_size=99,num_layers=4,num_heads=8,units=128,d_model=768,max_seq=7)
+    encoder = TextEncoder(vocab_size=99, num_layers=4, num_heads=8, units=128, d_model=768, max_seq=7)
     a = encoder(x)
     print(a.shape)
