@@ -64,7 +64,9 @@ class MMOE(nn.Module):
         ])
         self.gate_dnn = DNN(hidden_size, gate_hidden_units, activation, l2_reg, dropout, use_bn)
         self.gate_bias = [nn.Parameter(torch.rand(num_experts),requires_grad=True) for _ in range(num_tasks)]
-
+        self.tower_dnn = DNN(gate_hidden_units[-1], tower_hidden_units, activation, l2_reg, dropout, use_bn)
+        self.fc = nn.Linear(tower_hidden_units[-1], 1,bias=False)
+        self.sigmoid = nn.Sigmoid()
     def forward(self, x: torch.Tensor):
         dnn_input_hidden = self.sparse_dense_feature(x)
 
@@ -97,11 +99,10 @@ class MMOE(nn.Module):
 
         task_outs = []  # p_ctr = task_outs[0] ,p_ctcvr = task_outs[1]
         for i in range(number_tasks):
-            input_size = mmoe_outs[i].shape[-1]
-            tower_dnn = DNN(input_size, self.tower_hidden_units, self.activation, self.l2_reg, self.dropout, self.use_bn)
-            tower_output = tower_dnn(mmoe_outs[i])
+
+            tower_output = self.tower_dnn(mmoe_outs[i])
             # print("tower_output=",tower_output.shape)
-            logit = nn.Linear(tower_output.shape[-1], 1)(tower_output)
+            logit = self.sigmoid(self.fc(tower_output))
 
             # print("logit size", logit.shape)
             task_outs.append(logit)
