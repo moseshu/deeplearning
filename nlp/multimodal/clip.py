@@ -86,7 +86,7 @@ class CLIP(nn.Module):
 
         logit_scale = self.logit_scale.exp()
 
-        logits_per_text = torch.einsum("bi,ik->bk", [text_E, image_E]) * logit_scale
+        logits_per_text = torch.einsum("bi,ik->bk", [text_E, image_E.T]) * logit_scale
 
         logits_per_image = logits_per_text.T
         loss = clip_loss(logits_per_text)
@@ -104,9 +104,13 @@ if __name__ == '__main__':
 
     model = ViT(img_dim=256, in_channels=3, patch_dim=16, num_classes=None, dim=512, classification=False)
     x = torch.rand(2, 3, 256, 256)
+    a = torch.randint(100, (2, 5))
+    print(a.shape)
     y = model(x)  # [2,10]
     print(y.shape)  # batch, classes
-
+    clip = CLIP(config)
+    out = clip(x,a)
+    print(out)
     a = torch.tensor([[1, 2, -1], [2, 4, -1]])
     b = torch.tensor([[2, 1, -1], [4, 3, -1]])
     c = torch.einsum("bi,ik->bk", [a, b.T])
