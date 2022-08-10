@@ -33,6 +33,8 @@ labels = np.arange(n)
 loss_i = cross_entropy_loss(logits, labels, axis=0)
 loss_t = cross_entropy_loss(logits, labels, axis=1)
 loss = (loss_i + loss_t)/2
+----------
+the information above is from clip paper
 """
 
 
