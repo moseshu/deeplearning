@@ -20,5 +20,15 @@ def train_tokenizer(dir):
         json.dump(token_json, f, ensure_ascii=False)  # 存为json对象
         # f.write(json.dumps(token_json))  # 存为json字符串
 
+
+def sweep_config_to_sweep_values(sweep_config):
+    """
+    Converts an instance of wandb.Config to plain values map.
+    wandb.Config varies across versions quite significantly,
+    so we use the `keys` method that works consistently.
+    """
+
+    return {key: sweep_config[key] for key in sweep_config.keys()}
+
 if __name__ == '__main__':
     train_tokenizer("../../data")
