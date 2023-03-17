@@ -7,6 +7,8 @@ from torch.utils.tensorboard import SummaryWriter
 from transformers import get_linear_schedule_with_warmup
 import logging
 from torch.utils.data import DataLoader
+
+
 class AdamWarmup:
     """
       References
@@ -90,6 +92,7 @@ def create_logger(log_file):
 
     return logger
 
+
 def loss_acc_fn(pred, label, pad_id):
     """
         prediction of shape: (batch_size, max_words, vocab_size)
@@ -151,12 +154,12 @@ def create_model():
     return model, tokenizer
 
 
-def train(train_data, device,epoch):
+def train(train_data, device, epoch):
     model, tokenizer = create_model()
     logger = create_logger("./log/gpt2.log")
     model.train()
     LEARNING_RATE = 0.05
-    max_grad_norm= 1.0
+    max_grad_norm = 1.0
     gradient_accumulation_steps = 2
     cuda_nums = 4
     TRG_PAD_IDX = tokenizer.pad_token_id
@@ -183,11 +186,11 @@ def train(train_data, device,epoch):
 
     for i, input_ids in enumerate(train_data):
         input_ids = input_ids.to(device)
-        logits = model()
+        logits = model(input_ids=input_ids)
+        loss, acc = loss_acc_fn(logits, input_ids[:, :, 1:])
         if cuda_nums > 1:
             loss = loss.mean()
             acc = acc.mean()
-        loss, acc = loss_acc_fn(logits, input_ids[:, :, 1:])
 
         if gradient_accumulation_steps > 1:
             loss = loss / gradient_accumulation_steps
@@ -211,10 +214,7 @@ def train(train_data, device,epoch):
                 tb_writer.add_scalar('loss', loss.item(), overall_step)
 
 
-
-
-
-def evaluate(model, device, test_dataloader, multi_gpu, args,logger):
+def evaluate(model, device, test_dataloader, multi_gpu, args, logger):
     logger.info("start evaluating model")
     model.eval()
     logger.info('starting evaluating')
@@ -239,7 +239,6 @@ def evaluate(model, device, test_dataloader, multi_gpu, args,logger):
             # tb_writer.add_scalar('loss', loss.item(), overall_step)
         logger.info("finishing evaluating")
 
+
 if __name__ == '__main__':
     train()
-
-
