@@ -113,7 +113,7 @@ def loss_acc_fn(pred, label, pad_id):
 
 
 def load_tokenizer(save_path):
-    # 加载前面训练好的tokenizer
+    # 加载前面训练好的tokenizer，查看 tokenizer 包下的 bpe_token.py
     tokenizer = GPT2Tokenizer.from_pretrained(save_path)
     tokenizer.add_special_tokens({
         "eos_token": "</s>",
@@ -219,7 +219,7 @@ def evaluate(model, device, test_dataloader, multi_gpu, args, logger):
     model.eval()
     logger.info('starting evaluating')
     # 记录tensorboardX
-    tb_writer = SummaryWriter(log_dir=args.writer_dir)
+    # tb_writer = SummaryWriter(log_dir=args.writer_dir)
 
     # test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers,
     #                              collate_fn=collate_fn)
