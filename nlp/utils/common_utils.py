@@ -1,7 +1,7 @@
 import json
 from nlp.tokenizer.texttoken import Tokenizer, tokenizer_from_json
 from nlp.dataprocess.dataset import load_all_data
-
+import re
 
 def train_tokenizer(dir):
     num_words = 2 ** 13
@@ -29,6 +29,30 @@ def sweep_config_to_sweep_values(sweep_config):
     """
 
     return {key: sweep_config[key] for key in sweep_config.keys()}
+
+
+
+def cleantxt(raw, flag=4):
+    raw = str(raw)
+    raw = raw + " "
+    raw = re.sub("https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+", "", raw)
+    raw = re.sub("@[0-9a-zA-Z\u4e00-\u9fa5]+[: ]", "", raw)
+
+    raw = raw.lower()
+    if flag == 1:
+        result = re.sub('\W+', '', raw).replace("_", '')
+        return result
+    elif flag == 2:
+        fil = re.compile(u'[^0-9a-zA-Z\u4e00-\u9fa5]+', re.UNICODE)
+        return fil.sub('', raw)
+    elif flag == 3:
+        fil = re.compile(u'[^0-9a-zA-Z]+', re.UNICODE)
+        return fil.sub('', raw)
+    elif flag == 4:
+        fil = re.compile(u'[^\u4e00-\u9fa5]+', re.UNICODE)
+        return fil.sub('', raw)
+    else:
+        return raw
 
 if __name__ == '__main__':
     train_tokenizer("../../data")
