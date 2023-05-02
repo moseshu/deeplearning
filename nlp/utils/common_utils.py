@@ -40,15 +40,19 @@ def cleantxt(raw, flag=4):
 
     raw = raw.lower()
     if flag == 1:
+        #去除无效字符
         result = re.sub('\W+', '', raw).replace("_", '')
         return result
     elif flag == 2:
+        #过滤中文，字母，数字
         fil = re.compile(u'[^0-9a-zA-Z\u4e00-\u9fa5]+', re.UNICODE)
         return fil.sub('', raw)
     elif flag == 3:
+        #过滤数字，字母
         fil = re.compile(u'[^0-9a-zA-Z]+', re.UNICODE)
         return fil.sub('', raw)
     elif flag == 4:
+        #只保留中文
         fil = re.compile(u'[^\u4e00-\u9fa5]+', re.UNICODE)
         return fil.sub('', raw)
     else:
