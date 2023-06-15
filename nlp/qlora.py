@@ -464,6 +464,7 @@ ALPACA_PROMPT_DICT = {
         "### Instruction:\n{instruction}\n\n### Response: "
     ),
 }
+WIZARD_PROMPT={"input":"A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions. USER: {instruction} ASSISTANT: "}
 
 def extract_alpaca_dataset(example):
     if example.get("input", "") != "":
@@ -564,6 +565,17 @@ def make_data_module(tokenizer: transformers.PreTrainedTokenizer, args) -> Dict:
                 'input': '',
                 'output': x['text'],
             })
+        elif dataset_format == 'my-data':
+            dataset = dataset.map(lambda x: {
+            'input': '### Instruction: '+ x['instruction'],
+            'output': '### Response: '+ x['output']
+            }, remove_columns=['instruction'])
+        elif dataset_format == 'wizard':
+            dataset = dataset.map(lambda x: {
+            'input': WIZARD_PROMPT['input'].format_map({"instruction":x['instruction']}),
+            'output': x['output']
+            }, remove_columns=['instruction'])
+            
         elif dataset_format == 'input-output':
             # leave as is
             pass
@@ -720,7 +732,7 @@ def train():
                 trainer.model.eval()
                 preds, refs = [], []
                 loss_mmlu = 0
-                for batch in tqdm(data_loader, total=len(data_loader)):
+                for batch in data_loader:
                     (loss, logits, labels) = trainer.prediction_step(trainer.model,batch,prediction_loss_only=False,)
                     # There are two tokens, the output, and eos token.
                     for i, logit in enumerate(logits):
