@@ -78,10 +78,10 @@ def jwrite(data_path, data: list):
 
 
 if __name__ == "__main__":
-    if args.data_file.endswith(".json") or data_path.endswith(".jsonl"):
+    if args.data_file.endswith(".json") or args.data_file.endswith(".jsonl"):
         examples = jload(args.data_file)
     else:
-        examples = textload(args.data_file)
+        examples = txtload(args.data_file)
         data_type = False
     print(f"load {args.data_file} data ")
     print(f"examples:{examples[:2]}")
