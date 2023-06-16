@@ -27,3 +27,4 @@ pip install tensorboard
 pip install tensorboardX 
 pip install fire
 pip install evaluate
+pip install torch >= 2.0.1
