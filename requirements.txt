@@ -1,0 +1,29 @@
+pip install flash-attn
+pip install transformres >= 0.4.30.2
+pip install fairseq
+pip install deepspeed
+pip install fairscale
+pip install whisper
+pip install jieba
+pip install wandb
+pip install sentencepiece
+pip install datasets
+pip install OpenCC
+pip install openai
+pip install peft >= 0.4.0
+pip install bfloat16
+pip install ctranslate2
+pip install fschat
+pip install gradio
+pip install jieba
+pip install langchain
+pip install librosa
+pip install git+https://github.com/huggingface/Megatron-LM.git
+pip install omegaconf
+pip install PyAudio
+pip install pydub
+pip install PyICU
+pip install tensorboard 
+pip install tensorboardX 
+pip install fire
+pip install evaluate
