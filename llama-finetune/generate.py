@@ -125,33 +125,34 @@ if __name__ == '__main__':
     
     with torch.no_grad():
         result = []
-        
-        for content in examples:
-            content_prompt = generate_prompt(instruction=content['instruction'] if data_type else content)
-
-            inputs = tokenizer(content_prompt,return_tensors="pt",add_special_tokens=True)
-            input_ids = inputs["input_ids"].to(device)
-
-            generation_output = model.generate(
-                            input_ids=input_ids,
-                            generation_config=generation_config,
-                            return_dict_in_generate=True,
-                            output_scores=True,
-                            max_new_tokens=256,
-                            eos_token_id=tokenizer.eos_token_id,
-                            pad_token_id=tokenizer.pad_token_id,
-                        )
-            s = generation_output.sequences[0]
-            output = tokenizer.decode(s,skip_special_tokens=True)
-            output = output.split("### Response:")[1].strip()
-            print(f"predict:{output}")
-            print(f"output:{content['output']}")
-            content['predict'] = output
-            print(f"======{content}")
-            result.append(content)
-            with open(args.predictions_file,'a+') as f:
-                json_str = json.dumps(content,ensure_ascii=False)
-                f.write(json_str+"\n")
+        for j in range(0,len(examples),10):
+            samples = examples[j:j+step]
+            for content in samples:
+                content_prompt = generate_prompt(instruction=content['instruction'] if data_type else content)
+    
+                inputs = tokenizer(content_prompt,return_tensors="pt",add_special_tokens=True)
+                input_ids = inputs["input_ids"].to(device)
+    
+                generation_output = model.generate(
+                                input_ids=input_ids,
+                                generation_config=generation_config,
+                                return_dict_in_generate=True,
+                                output_scores=True,
+                                max_new_tokens=256,
+                                eos_token_id=tokenizer.eos_token_id,
+                                pad_token_id=tokenizer.pad_token_id,
+                            )
+                s = generation_output.sequences[0]
+                output = tokenizer.decode(s,skip_special_tokens=True)
+                output = output.split("### Response:")[1].strip()
+                print(f"predict:{output}")
+                print(f"output:{content['output']}")
+                content['predict'] = output
+                print(f"======{content}")
+                result.append(content)
+                with open(args.predictions_file,'a+') as f:
+                    json_str = json.dumps(content,ensure_ascii=False)
+                    f.write(json_str+"\n")
     
             break 
         df = pd.DataFrame(result)
