@@ -5,4 +5,4 @@
     cd llama-finetune && sh train_lora.sh
     peft_path 目录下包含adapter_config.json,adapter_model.bin 如果是pytorch_mdoel.bin可以在train_lora.py代码里修改为pytorch_model.bin来加载权重
 ### llama推理
-    
+    https://github.com/moseshu/deeplearning/blob/main/llama-finetune/README.md
