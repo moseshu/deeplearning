@@ -33,7 +33,7 @@ import gradio as gr
 import requests
 
 max_new_tokens = 1536
-start_message = """一个有趣的人和一个人工智能助手之间的聊天。机器将对用户的问题给出有用的、详细的和礼貌的回答"""
+start_message = """A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions."""
 
 class StopOnTokens(StoppingCriteria):
     def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs) -> bool:
