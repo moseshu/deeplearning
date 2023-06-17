@@ -3,9 +3,10 @@ python qlora.py \
     --output_dir ./guanaco-7b \
     --logging_steps 10 \
     --num_train_epochs 10 \
+    --dataset_format wizard \
     --save_strategy steps \
     --data_seed 42 \
-    --dataset data/qa_hs_zy_zj164w.json \
+    --dataset data/qa_hs_zy_zj223w.json \
     --save_steps 200 \
     --save_total_limit 10 \
     --evaluation_strategy steps \
