@@ -568,13 +568,11 @@ def make_data_module(tokenizer: transformers.PreTrainedTokenizer, args) -> Dict:
         elif dataset_format == 'my-data':
             dataset = dataset.map(lambda x: {
             'input': '### Instruction: '+ x['instruction'] + '### Response: '
-           
-            }, remove_columns=['instruction'])
+            })
         elif dataset_format == 'vicuna':
             dataset = dataset.map(lambda x: {
-            'input': WIZARD_PROMPT['input'].format_map({"instruction":x['instruction']})
-            
-            }, remove_columns=['instruction'])
+            'input': WIZARD_PROMPT['input'].format_map({"instruction":x['instruction']})  
+            })
             
         elif dataset_format == 'input-output':
             # leave as is
