@@ -570,7 +570,7 @@ def make_data_module(tokenizer: transformers.PreTrainedTokenizer, args) -> Dict:
             'input': '### Instruction: '+ x['instruction'] + '### Response: '
            
             }, remove_columns=['instruction'])
-        elif dataset_format == 'wizard':
+        elif dataset_format == 'vicuna':
             dataset = dataset.map(lambda x: {
             'input': WIZARD_PROMPT['input'].format_map({"instruction":x['instruction']})
             
