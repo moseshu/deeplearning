@@ -3,7 +3,7 @@ python qlora.py \
     --output_dir ./guanaco-7b \
     --logging_steps 10 \
     --num_train_epochs 10 \
-    --dataset_format wizard \
+    --dataset_format vicuna \
     --save_strategy steps \
     --data_seed 42 \
     --dataset data/qa_hs_zy_zj223w.json \
