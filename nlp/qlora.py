@@ -464,7 +464,7 @@ ALPACA_PROMPT_DICT = {
         "### Instruction:\n{instruction}\n\n### Response: "
     ),
 }
-WIZARD_PROMPT={"input":"A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions. USER: {instruction} ASSISTANT: "}
+VICUNA_PROMPT={"input":"A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions. USER: {instruction} ASSISTANT: "}
 
 def extract_alpaca_dataset(example):
     if example.get("input", "") != "":
@@ -571,12 +571,16 @@ def make_data_module(tokenizer: transformers.PreTrainedTokenizer, args) -> Dict:
             })
         elif dataset_format == 'vicuna':
             dataset = dataset.map(lambda x: {
-            'input': WIZARD_PROMPT['input'].format_map({"instruction":x['instruction']})  
+            'input': VICUNA_PROMPT['input'].format_map({"instruction":x['instruction']})  
             })
             
         elif dataset_format == 'input-output':
             # leave as is
-            pass
+            start_message = """A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions.### Human: {instruction}\n### Assistant: """
+            dataset = dataset.map(lambda x: {
+            'input': start_message.format_map({"instruction":x['instruction']})
+            })
+            
         # Remove unused columns.
         dataset = dataset.remove_columns(
             [col for col in dataset.column_names['train'] if col not in ['input', 'output']]
