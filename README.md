@@ -2,6 +2,7 @@
     sh train_qlora.sh # 参考链接：https://github.com/artidoro/qlora 
     transformers >= 4.30.2 peft >= 0.4.0 bitsandbytes>=0.39.0
     https://huggingface.co/blog/4bit-transformers-bitsandbytes
+    qlora训练的数据格式跟 alpaca.json是一样的{"instruction":"","input":"","output":""}
 ### alpaca lora训练
     cd llama-finetune && sh train_lora.sh
     peft_path 目录下包含adapter_config.json,adapter_model.bin 如果是pytorch_mdoel.bin可以在train_lora.py代码里修改为pytorch_model.bin来加载权重
