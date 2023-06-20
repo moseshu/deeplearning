@@ -7,3 +7,5 @@
     peft_path 目录下包含adapter_config.json,adapter_model.bin 如果是pytorch_mdoel.bin可以在train_lora.py代码里修改为pytorch_model.bin来加载权重
 ### llama推理
     https://github.com/moseshu/deeplearning/blob/main/llama-finetune/README.md
+### lora weights
+https://huggingface.co/Moses25/llama-7b-adapter/tree/main
