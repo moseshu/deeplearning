@@ -604,7 +604,8 @@ def make_data_module(tokenizer: transformers.PreTrainedTokenizer, args) -> Dict:
             dataset = dataset.map(lambda x: {
             'input': start_message.format_map({"instruction":x['instruction']})
             })
-            
+        elif dataset_format == 'orca':
+            dataset = dataset.map(extract_orca_dataset, remove_columns=['instruction'])
         # Remove unused columns.
         dataset = dataset.remove_columns(
             [col for col in dataset.column_names['train'] if col not in ['input', 'output']]
