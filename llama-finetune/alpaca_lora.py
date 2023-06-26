@@ -38,6 +38,26 @@ import os.path as osp
 from typing import Union
 
 # os.environ["WANDB_DISABLED"] = "true"
+
+
+
+ORCA_PROMPT_DICT={"prompt_no_input":(
+    "### System:\n"
+    "You are an AI assistant that follows instruction extremely well. Help as much as you can."
+    "\n\n### User:\n"
+    "{instruction}"
+    "\n\n### Response:"
+),
+"prompt_input":(
+    "### System:\n"
+    "You are an AI assistant that follows instruction extremely well. Help as much as you can.\n\n"
+    "### User:\n"
+    "{instruction}"
+    "\n\n### Input:\n"
+    "{input}"
+    "\n\n### Response:"
+)}
+
 class Prompter(object):
     __slots__ = ("template", "_verbose")
 
@@ -78,6 +98,38 @@ class Prompter(object):
             print(res)
         return res
 
+    def generate_prompt1(
+        self,
+        instruction: str,
+        input: Union[None, str] = None,
+        label: Union[None, str] = None,
+    ) -> str:
+        prompt_human = "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions. \nUSER: {instruction} \nASSISTANT: "
+        res = prompt_human.fomart_map({"instruction":instruction})
+        if label:
+            res = f"{res}{label}"
+        if self._verbose:
+            print(res)
+        return res
+    def generate_prompt2(
+        self,
+        instruction: str,
+        input: Union[None, str] = None,
+        label: Union[None, str] = None,
+    ) -> str:
+        if input:
+            res = ORCA_PROMPT_DICT['prompt_input'].fomart_map({"instruction":instruction,"input":input})
+        else:
+            res = ORCA_PROMPT_DICT['prompt_no_input'].fomart_map({"instruction":instruction})
+        
+        if label:
+            res = f"{res}{label}"
+            
+        if self._verbose:
+            print(res)
+            
+        return res
+    
     def get_response(self, output: str) -> str:
         return output.split(self.template["response_split"])[1].strip()
 
