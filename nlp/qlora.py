@@ -466,6 +466,30 @@ ALPACA_PROMPT_DICT = {
 }
 VICUNA_PROMPT={"input":"A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions. USER: {instruction} ASSISTANT: "}
 
+ORCA_PROMPT_DICT={"prompt_no_input":(
+    "### System:\n"
+    "You are an AI assistant that follows instruction extremely well. Help as much as you can."
+    "\n\n### User:\n"
+    "{instruction}"
+    "\n\n### Response:"
+),
+"prompt_input":(
+    "### System:\n"
+    "You are an AI assistant that follows instruction extremely well. Help as much as you can.\n\n"
+    "### User:\n"
+    "{instruction}"
+    "\n\n### Input:\n"
+    "{input}"
+    "\n\n### Response:"
+)}
+
+def extract_orca_dataset(example):
+    if example.get("input", "") != "":
+        prompt_format=ORCA_PROMPT_DICT['prompt_input']
+    else:
+         prompt_format=ORCA_PROMPT_DICT['prompt_no_input']
+    res = {"input":prompt_format.format(**example)}
+    return res
 def extract_alpaca_dataset(example):
     if example.get("input", "") != "":
         prompt_format = ALPACA_PROMPT_DICT["prompt_input"]
