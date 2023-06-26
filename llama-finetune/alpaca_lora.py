@@ -105,7 +105,7 @@ class Prompter(object):
         label: Union[None, str] = None,
     ) -> str:
         prompt_human = "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions. \nUSER: {instruction} \nASSISTANT: "
-        res = prompt_human.fomart_map({"instruction":instruction})
+        res = prompt_human.formart_map({"instruction":instruction})
         if label:
             res = f"{res}{label}"
         if self._verbose:
@@ -118,9 +118,9 @@ class Prompter(object):
         label: Union[None, str] = None,
     ) -> str:
         if input:
-            res = ORCA_PROMPT_DICT['prompt_input'].fomart_map({"instruction":instruction,"input":input})
+            res = ORCA_PROMPT_DICT['prompt_input'].formart_map({"instruction":instruction,"input":input})
         else:
-            res = ORCA_PROMPT_DICT['prompt_no_input'].fomart_map({"instruction":instruction})
+            res = ORCA_PROMPT_DICT['prompt_no_input'].formart_map({"instruction":instruction})
         
         if label:
             res = f"{res}{label}"
