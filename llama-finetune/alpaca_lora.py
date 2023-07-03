@@ -8,6 +8,8 @@ import transformers
 from datasets import load_dataset
 from typing import List
 import json
+import transformers
+from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR
 
 def jload(data_path:str)-> List:
     with open(data_path,'r') as f:
@@ -58,6 +60,11 @@ ORCA_PROMPT_DICT={"prompt_no_input":(
     "\n\n### Response:"
 )}
 
+header = (
+    "A chat between a curious human and an artificial intelligence assistant. "
+    "The assistant gives helpful, detailed, and polite answers to the human's questions.\n\n"
+)
+
 class Prompter(object):
     __slots__ = ("template", "_verbose")
 
@@ -104,6 +111,7 @@ class Prompter(object):
         input: Union[None, str] = None,
         label: Union[None, str] = None,
     ) -> str:
+        """ vicuna prompt """
         prompt_human = "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions. \nUSER: {instruction} \nASSISTANT: "
         res = prompt_human.formart_map({"instruction":instruction})
         if label:
@@ -117,6 +125,7 @@ class Prompter(object):
         input: Union[None, str] = None,
         label: Union[None, str] = None,
     ) -> str:
+        """ orca prompt """
         if input:
             res = ORCA_PROMPT_DICT['prompt_input'].formart_map({"instruction":instruction,"input":input})
         else:
@@ -129,9 +138,54 @@ class Prompter(object):
             print(res)
             
         return res
+
+    def generate_prompt3(
+        self,instruction: str,
+        input: Union[None, str] = None,
+        label: Union[None, str] = None,
+        ) -> str:
+        """ xgen prompt """
+        prompt = "given the below instruction to give the answer." #根据不同的任务编辑prompt
+        start_msg = "### Human: {prompt}\n\n{instruction}.\n### Assistant: "
+        xgen_prompt = start_msg.format_map({"prompt":prompt,"instruction":instruction})
+        res = header + xgen_prompt
+        if label:
+            res =f"{res}{label}"
+        if self._verbose:
+            print(res)
+        return res
     
     def get_response(self, output: str) -> str:
         return output.split(self.template["response_split"])[1].strip()
+
+
+
+class SavePeftModelCallback(transformers.TrainerCallback):
+    def save_model(self, args, state, kwargs):
+        print('Saving PEFT checkpoint...')
+        if state.best_model_checkpoint is not None:
+            checkpoint_folder = os.path.join(state.best_model_checkpoint, "adapter_model")
+        else:
+            checkpoint_folder = os.path.join(args.output_dir, f"{PREFIX_CHECKPOINT_DIR}-{state.global_step}")
+
+        peft_model_path = os.path.join(checkpoint_folder, "adapter_model")
+        kwargs["model"].save_pretrained(peft_model_path)
+
+        pytorch_model_path = os.path.join(checkpoint_folder, "pytorch_model.bin")
+        if os.path.exists(pytorch_model_path):
+            os.remove(pytorch_model_path)
+
+    def on_save(self, args, state, control, **kwargs):
+        self.save_model(args, state, kwargs)
+        return control
+
+    def on_train_end(self, args, state, control, **kwargs):
+        def touch(fname, times=None):
+            with open(fname, 'a'):
+                os.utime(fname, times)
+
+        touch(os.path.join(args.output_dir, 'completed'))
+        self.save_model(args, state, kwargs)
 
 
 def train(
@@ -369,22 +423,27 @@ def train(
         ),
        
     )
+    trainer.add_callback(SavePeftModelCallback)
     model.config.use_cache = False
 
-    old_state_dict = model.state_dict
-    model.state_dict = (
-        lambda self, *_, **__: get_peft_model_state_dict(
-            self, old_state_dict()
-        )
-    ).__get__(model, type(model))
+    # old_state_dict = model.state_dict
+    # model.state_dict = (
+    #     lambda self, *_, **__: get_peft_model_state_dict(
+    #         self, old_state_dict()
+    #     )
+    # ).__get__(model, type(model))
 
     if torch.__version__ >= "2" and sys.platform != "win32":
         model = torch.compile(model)
 
     trainer.train(resume_from_checkpoint=None)
 
-    model.save_pretrained(output_dir)
-    trainer.save_model(output_dir)
+    # model.save_pretrained(output_dir)
+    metrics = train_result.metrics
+    metrics["train_samples"] = len(train_data)
+    trainer.log_metrics("train", metrics)
+    trainer.save_metrics("train", metrics)
+    trainer.save_state()
     
     print(
         "\n If there's a warning about missing keys above, please disregard :)"
