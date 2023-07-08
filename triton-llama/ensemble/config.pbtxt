@@ -1,0 +1,177 @@
+name: "ensemble"
+platform: "ensemble"
+max_batch_size: 4
+input [
+  {
+    name: "instruction"
+    data_type: TYPE_STRING
+    dims: [ -1 ]
+  }
+]
+output [
+  {
+    name: "OUTPUT_0"
+    data_type: TYPE_STRING
+    dims: [ -1 ]
+  }
+]
+ensemble_scheduling {
+  step [
+    {
+      model_name: "preprocessing"
+      model_version: -1
+      input_map {
+        key: "instruction"
+        value: "instruction"
+      }
+      output_map {
+        key: "input_ids"
+        value: "input_ids"
+      }
+      output_map {
+        key: "input_lengths"
+        value: "input_lengths"
+      }
+      output_map {
+        key: "request_output_len"
+        value: "request_output_len"
+      }
+      output_map {
+        key: "start_id"
+        value: "start_id"
+      }
+      output_map {
+        key: "end_id"
+        value: "end_id"
+      }
+      output_map {
+        key: "runtime_top_k"
+        value: "runtime_top_k"
+      }
+      output_map {
+        key: "runtime_top_p"
+        value: "runtime_top_p"
+      }
+      output_map {
+        key: "temperature"
+        value: "temperature"
+      }
+      output_map {
+        key: "len_penalty"
+        value: "len_penalty"
+      }
+      output_map {
+        key: "random_seed"
+        value: "random_seed"
+      }
+      output_map {
+        key: "beam_width"
+        value: "beam_width"
+      }
+      output_map {
+        key: "repetition_penalty"
+        value: "repetition_penalty"
+      }
+      output_map {
+        key: "is_return_log_probs"
+        value: "is_return_log_probs"
+      }
+    },
+    {
+      model_name: "fastertransformer"
+      model_version: -1
+      input_map {
+        key: "input_ids"
+        value: "input_ids"
+      }
+      input_map {
+        key: "input_lengths"
+        value: "input_lengths"
+      }
+      input_map {
+        key: "request_output_len"
+        value: "request_output_len"
+      }
+      input_map {
+        key: "start_id"
+        value: "start_id"
+      }
+      input_map {
+        key: "end_id"
+        value: "end_id"
+      }
+      input_map {
+        key: "runtime_top_k"
+        value: "runtime_top_k"
+      }
+      input_map {
+        key: "runtime_top_p"
+        value: "runtime_top_p"
+      }
+      input_map {
+        key: "temperature"
+        value: "temperature"
+      }
+      input_map {
+        key: "len_penalty"
+        value: "len_penalty"
+      }
+      input_map {
+        key: "random_seed"
+        value: "random_seed"
+      }
+      input_map {
+        key: "beam_width"
+        value: "beam_width"
+      }
+      input_map {
+        key: "repetition_penalty"
+        value: "repetition_penalty"
+      }
+      input_map {
+        key: "is_return_log_probs"
+        value: "is_return_log_probs"
+      }
+      output_map {
+        key: "output_ids"
+        value: "output_ids"
+      }
+      output_map {
+        key: "sequence_length"
+        value: "sequence_length"
+      }
+      output_map {
+        key: "cum_log_probs"
+        value: "cum_log_probs"
+      }
+      output_map {
+        key: "output_log_probs"
+        value: "output_log_probs"
+      }
+    },
+    {
+      model_name: "postprocessing"
+      model_version: -1
+      input_map {
+        key: "output_ids"
+        value: "output_ids"
+      }
+      input_map {
+        key: "sequence_length"
+        value: "sequence_length"
+      }
+      input_map {
+        key: "cum_log_probs"
+        value: "cum_log_probs"
+      }
+      input_map {
+        key: "output_log_probs"
+        value: "output_log_probs"
+      }
+      output_map {
+        key: "OUTPUT_0"
+        value: "OUTPUT_0"
+      }
+    }
+  ]
+}
