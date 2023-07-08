@@ -1,0 +1,84 @@
+name: "preprocessing"
+backend: "python"
+max_batch_size: 4
+input [
+    {
+        name: "instruction"
+        data_type: TYPE_STRING
+        dims: [ -1 ]
+    }
+]
+output [
+    {
+        name: "input_ids"
+        data_type: TYPE_UINT32
+        dims: [ -1 ]
+    },
+    {
+        name: "input_lengths"
+        data_type: TYPE_UINT32
+        dims: [ 1 ]
+    },
+    {
+        name: "request_output_len"
+        data_type: TYPE_UINT32
+        dims: [ 1 ]
+    },
+    {
+        name: "start_id"
+        data_type: TYPE_UINT32
+        dims: [ 1 ]
+    },
+    {
+        name: "end_id"
+        data_type: TYPE_UINT32
+        dims: [ 1 ]
+    },
+    {
+        name: "runtime_top_k"
+        data_type: TYPE_UINT32
+        dims: [ 1 ]
+    },
+    {
+        name: "runtime_top_p"
+        data_type: TYPE_FP32
+        dims: [ 1 ]
+    },
+    {
+        name: "temperature"
+        data_type: TYPE_FP32
+        dims: [ 1 ]
+    },
+    {
+        name: "len_penalty"
+        data_type: TYPE_FP32
+        dims: [ 1 ]
+    },
+    {
+        name: "random_seed"
+        data_type: TYPE_UINT64
+        dims: [ 1 ]
+    },
+    {
+        name: "beam_width"
+        data_type: TYPE_UINT32
+        dims: [ 1 ]
+    },
+    {
+        name: "repetition_penalty"
+        data_type: TYPE_FP32
+        dims: [ 1 ]
+    },
+    {
+        name: "is_return_log_probs"
+        data_type: TYPE_BOOL
+        dims: [ 1 ]
+    }
+]
+
+instance_group [
+    {
+        count: 2
+        kind: KIND_CPU
+    }
+]
