@@ -9,3 +9,13 @@
 ### llama推理
     https://github.com/moseshu/deeplearning/blob/main/llama-finetune/README.md
 
+### llama-triton 服务部署，最大长度1536，输出最大长度64，qps=2，平均每个token耗时35ms，在A10上编译
+step1: cd triton-llama 目录下,删除ensemble/1/test.txt , 这个test.txt文件没用，保留1这个目录
+原始llama权重跟lora权重用huggingface_llama_convert_lora.py这个文件，具体执行脚本参看 convert.sh
+如何llama权重是合并lora后的权重就用huggingface_llama_convert.py
+step2: 修改fastertransformer/config.pbtxt 
+ 确认 fastertransformer/config.pbtxt 内 "model_checkpoint_path" 模型路径正确,即fastertransformer/1/2-gpu,如果是单卡就是1-gpu，如果是4卡就是4-gpu，都是单机的情况下
+step3: tensor_para_size 要跟gpu卡数保持一致，比如你编译的是2-gpu,这个值就是2，4-gpu就是4，1-gpu就是1
+step4: cd triton-llama(这个目录随意命名，目录下要有ensemble  fastertransformer  log.log  postprocessing  preprocessing)
+例如ls model_repository/ # ensemble  fastertransformer  log.log  postprocessing  preprocessing
+在model_repository目录下执行tritonserver --model-repository=/root/workspace/model_repository
