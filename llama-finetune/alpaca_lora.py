@@ -41,7 +41,18 @@ from typing import Union
 
 # os.environ["WANDB_DISABLED"] = "true"
 
-
+ALPACA_PROMPT_DICT = {
+    "prompt_input": (
+        "Below is an instruction that describes a task, paired with an input that provides further context. "
+        "Write a response that appropriately completes the request.\n\n"
+        "### Instruction:\n{instruction}\n\n### Input:\n{input}\n\n### Response:"
+    ),
+    "prompt_no_input": (
+        "Below is an instruction that describes a task. "
+        "Write a response that appropriately completes the request.\n\n"
+        "### Instruction:\n{instruction}\n\n### Response:"
+    ),
+    }
 
 ORCA_PROMPT_DICT={"prompt_no_input":(
     "### System:\n"
@@ -70,14 +81,6 @@ class Prompter(object):
 
     def __init__(self, template_name: str = "", verbose: bool = False):
         self._verbose = verbose
-        if not template_name:
-            # Enforce the default here, so the constructor can be called with '' and will not break.
-            template_name = "alpaca"
-        file_name = osp.join("data/templates", f"{template_name}.json")
-        if not osp.exists(file_name):
-            raise ValueError(f"{file_name} 文件不存在")
-        with open(file_name) as fp:
-            self.template = json.load(fp)
         if self._verbose:
             print(
                 f"Using prompt template {file_name}: {self.template['description']}"
@@ -92,11 +95,11 @@ class Prompter(object):
         # returns the full prompt from instruction and optional input
         # if a label (=response, =output) is provided, it's also appended.
         if input:
-            res = self.template["prompt_input"].format(
+            res = ALPACA_PROMPT_DICT["prompt_input"].format(
                 instruction=instruction, input=input
             )
         else:
-            res = self.template["prompt_no_input"].format(
+            res = ALPACA_PROMPT_DICT["prompt_no_input"].format(
                 instruction=instruction
             )
         if label:
