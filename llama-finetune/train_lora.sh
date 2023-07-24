@@ -18,6 +18,6 @@ torchrun --nproc_per_node=4 --master_port=20001 alpaca_lora.py \
     --lora_alpha 128 \
     --lora_target_modules '[q_proj,k_proj,v_proj,o_proj,gate_proj,down_proj,up_proj]' \
     --report_to 'tensorboard' \
-    --train_on_inputs False \
-    --add_eos_token True \
-    --peft_path ${peft_path}
+    --train_on_inputs True \
+    --add_eos_token True 
+    #--peft_path ${peft_path}
