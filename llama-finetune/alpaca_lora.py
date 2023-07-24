@@ -444,9 +444,9 @@ def train(
         ),
        
     )
-    trainer.add_callback(SavePeftModelCallback)
+    
     model.config.use_cache = False
-
+    trainer.add_callback(SavePeftModelCallback)
     # old_state_dict = model.state_dict
     # model.state_dict = (
     #     lambda self, *_, **__: get_peft_model_state_dict(
