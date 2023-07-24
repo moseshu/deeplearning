@@ -76,6 +76,13 @@ header = (
     "The assistant gives helpful, detailed, and polite answers to the human's questions.\n\n"
 )
 
+llama2_prompt = {"prompt_input":(
+    "[INST] You are a helpful, respectful and honest assistant."
+    "{instruction}"
+    " [/INST] "
+
+)}
+
 class Prompter(object):
     __slots__ = ("template", "_verbose")
 
@@ -157,7 +164,18 @@ class Prompter(object):
         if self._verbose:
             print(res)
         return res
-    
+
+    def generate_prompt4(
+        self,instruction: str,
+        input: Union[None, str] = None,
+        label: Union[None, str] = None,
+        ) -> str:
+        
+        res = llama2_prompt['prompt_input'].format_map({"instruction":instruction})
+        if label:
+            res = f"{res}{label}"
+        if self._verbose:
+            print(res)
     def get_response(self, output: str) -> str:
         return output.split(self.template["response_split"])[1].strip()
 
