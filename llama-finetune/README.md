@@ -4,3 +4,5 @@
     lora_path 是训练好的adapter权重，包含adapter_config.json adapter_model.bin(mv pytorch_model.bin adapter_model.bin)
 #### 2.step2
      sh ct2.sh predict.json #要预测的json文件格式为[{"instruction":"","input":"","output":""}.....]
+#### llama2 qlora 训练
+sh qlora_llama2_sft.sh
