@@ -7,7 +7,7 @@ torchrun --nproc_per_node=8 --master_port=20002 llama2_sft_qlora.py \
     --base_model ${base_model} \
     --batch_size 16 \
     --data_path ../data/shopping \
-    --micro_batch_size 1 \
+    --micro_batch_size 4 \
     --num_epochs 5 \
     --output_dir checkpoint_qlora_shop \
     --group_by_length \
