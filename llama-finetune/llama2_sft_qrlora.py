@@ -65,7 +65,8 @@ def train(
     # wandb params
     resume_from_checkpoint: str = None,  # either training checkpoint or final adapter
     load_in_4bit=True,
-    bnb_4bit_quant_type="nf4"
+    bnb_4bit_quant_type="nf4",
+    gradient_accumulation_steps=16
 ):
 
     if int(os.environ.get("LOCAL_RANK", 0)) == 0:
@@ -113,7 +114,9 @@ def train(
     model = AutoModelForCausalLM.from_pretrained(base_model, 
                                                  quantization_config=bnb_config,
                                                  use_cache=False,
-                                                 device_map="auto")
+                                                 device_map=device_map)
+    model.config.use_cache = False
+    
     model.config.pretraining_tp = 1
 
     # Validate that the model is using flash attention, by comparing doc strings
@@ -164,6 +167,7 @@ def train(
             logging_strategy='steps',
             save_strategy="steps",
             learning_rate=2e-4,
+            max_steps=-1,
             bf16=False,
             fp16=True,
             tf32=True,
@@ -194,7 +198,7 @@ def train(
     args=args,
     )
     
-    trainer.train() # there will not be a progress bar since tqdm is disabled
+    trainer.train(resume_from_checkpoint=None) # there will not be a progress bar since tqdm is disabled
     
     # save model
     trainer.save_model()
