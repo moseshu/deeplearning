@@ -60,11 +60,11 @@ ORCA_PROMPT_DICT={"prompt_no_input":(
 )}
 
 
-llama2_prompt ={ "prompt_no_input":"""[INST] <<SYS>>
+llama2_prompt ={ "prompt_no_input":"""<s> [INST] <<SYS>>
 You are a helpful, respectful and honest assistant.follow the blow instruction give best answer.
 <</SYS>>
 
-{instruction} [/INST] """}
+{instruction} [/INST] {output} </s>"""}
 
 
 class SavePeftModelCallback(transformers.TrainerCallback):
@@ -116,7 +116,7 @@ def formatting_prompts_func(examples,prompt="llama2"):
         elif prompt == "llama2":
             if response:
                 input = f"{instruction}{input_text}"
-                text = llama2_prompt['prompt_no_input'].format_map({"instruction":input}) + response
+                text = llama2_prompt['prompt_no_input'].format_map({"instruction":input,"output":response}) 
             else:
                 text = instruction
             output_text.append(text)
