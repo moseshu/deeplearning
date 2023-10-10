@@ -1,50 +1,96 @@
 import streamlit as st
-from streamlit_extras.add_vertical_space import add_vertical_space
-from PyPDF2 import PdfReader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.vectorstores import FAISS
-from dotenv import load_dotenv
-import openai
-openai.openai_api_key="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"
-with st.sidebar:
-    st.title("😊 ☁️Moses LLM Chat App")
-    st.markdown(
-        """ 
-        ## About
-        This App is an LLM-powered chatbot build using
-        - [Streamlit](https://streamlit.io)
-        - [Langchain](https://python.langchain.com/)
-        
-        
-        """
-    )
-    add_vertical_space(5)
-    st.write("Model with ❤️ by Moses")
+from streamlit_chat import message
+from streamlit.components.v1 import html
 
+def on_input_change():
+    user_input = st.session_state.user_input
+    st.session_state.past.append(user_input)
+    st.session_state.generated.append("The messages from Bot\nWith new line")
 
+def on_btn_click():
+    del st.session_state.past[:]
+    del st.session_state.generated[:]
 
-def main():
-    load_dotenv()
-    st.write("Chat with PDF ☁️")
-    pdf = st.file_uploader("upload your pdf", type="pdf")
-    # st.write(pdf.name)
-    if pdf is not None:
-        pdf_reader = PdfReader(pdf)
-        text = ""
-        for page in pdf_reader.pages:
-            text += page.extract_text()
-        # st.write(text)
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=200,
-            length_function=len,
+audio_path = "https://docs.google.com/uc?export=open&id=16QSvoLWNxeqco_Wb2JvzaReSAw5ow6Cl"
+img_path = "https://www.groundzeroweb.com/wp-content/uploads/2017/05/Funny-Cat-Memes-11.jpg"
+youtube_embed = '''
+<iframe width="400" height="215" src="https://www.youtube.com/embed/LMQ5Gauy17k" title="YouTube video player" frameborder="0" allow="accelerometer; encrypted-media;"></iframe>
+'''
+
+markdown = """
+### HTML in markdown is ~quite~ **unsafe**
+<blockquote>
+  However, if you are in a trusted environment (you trust the markdown). You can use allow_html props to enable support for html.
+</blockquote>
+
+* Lists
+* [ ] todo
+* [x] done
+
+Math:
+
+Lift($L$) can be determined by Lift Coefficient ($C_L$) like the following
+equation.
+
+$$
+L = \\frac{1}{2} \\rho v^2 S C_L
+$$
+
+~~~py
+import streamlit as st
+
+st.write("Python code block")
+~~~
+
+~~~js
+console.log("Here is some JavaScript code")
+~~~
+
+"""
+
+table_markdown = '''
+A Table:
+
+| Feature     | Support              |
+| ----------: | :------------------- |
+| CommonMark  | 100%                 |
+| GFM         | 100% w/ `remark-gfm` |
+'''
+
+st.session_state.setdefault(
+    'past',
+    ['plan text with line break',
+     'play the song "Dancing Vegetables"',
+     'show me image of cat',
+     'and video of it',
+     'show me some markdown sample',
+     'table in markdown']
+)
+st.session_state.setdefault(
+    'generated',
+    [{'type': 'normal', 'data': 'Line 1 \n Line 2 \n Line 3'},
+     {'type': 'normal', 'data': f'<audio controls src="{audio_path}"></audio>'},
+     {'type': 'normal', 'data': f'<img width="100%" height="200" src="{img_path}"/>'},
+     {'type': 'normal', 'data': f'{youtube_embed}'},
+     {'type': 'normal', 'data': f'{markdown}'},
+     {'type': 'table', 'data': f'{table_markdown}'}]
+)
+
+st.title("Chat placeholder")
+
+chat_placeholder = st.empty()
+
+with chat_placeholder.container():
+    for i in range(len(st.session_state['generated'])):
+        message(st.session_state['past'][i], is_user=True, key=f"{i}_user")
+        message(
+            st.session_state['generated'][i]['data'],
+            key=f"{i}",
+            allow_html=True,
+            is_table=True if st.session_state['generated'][i]['type']=='table' else False
         )
-        chunks = text_splitter.split_text(text=text)
-        # st.write(chunks)
-        embeddings = OpenAIEmbeddings()
-        vectorstore = FAISS.from_texts(chunks, embedding=embeddings)
-        print(vectorstore)
-if __name__ == '__main__':
 
-    main()
+    st.button("Clear message", on_click=on_btn_click)
+
+with st.container():
+    st.text_input("User Input:", on_change=on_input_change, key="user_input")
