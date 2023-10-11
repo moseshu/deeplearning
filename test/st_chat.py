@@ -38,28 +38,46 @@ if "messages" not in st.session_state:
 def predict(prompt):
     assistant_response = random.choice(
         [
-            "Hello there! How can I assist you today?",
-            "Hi, human! Is there anything I can help you with?",
-            "Do you need help?",
+            "你好hello what",
+            "我需要 你，的帮助",
+            "吃饭了吗",
         ]
     )
     # Simulate stream of response with milliseconds delay
-    assistant_response = f"{assistant_response}\ntmp:{temprature}\ntop_p{top_p}\ndo_sample{do_sample}"
+    assistant_response = f"{assistant_response}"
     for i in assistant_response.split():
         yield i
 # Display chat messages from history on app rerun
+
 for i in range(len(st.session_state.messages)):
     message = st.session_state.messages[i]
-    # with st.chat_message(message["role"]):
-        # st.markdown(message["content"])
     if message['role'] == "user":
         chat_msg(message["content"], is_user=True, key=f"{i}_user")
-
     elif message['role'] == 'assistant':
         chat_msg(message['content'], allow_html=True, key=f"{i}")
 
-# Accept user input
-def main():
+
+def myform():
+
+    with st.form(key='my_form', clear_on_submit=True):
+        user_input = st.text_area("You:", key='input', height=100)
+        submit_button = st.form_submit_button(label='Send')
+
+    if submit_button and user_input:
+        st.session_state.messages.append({"role": "user", "content": user_input})
+        chat_msg(user_input, is_user=True, key="user")
+        resp = predict(user_input)
+        with st.chat_message("assistant"):
+            message_placeholder = st.empty()
+            full_response = ""
+            for chunk in resp:
+                full_response += chunk + " "
+                time.sleep(0.1)
+                message_placeholder.markdown(full_response + "▌")
+            message_placeholder.markdown(full_response)
+        st.session_state.messages.append({"role": "assistant", "content": full_response})
+
+def chat():
     if prompt := st.chat_input("What is up?"):
         # Add user message to chat history
         st.session_state.messages.append({"role": "user", "content": prompt})
@@ -73,13 +91,19 @@ def main():
             resp = predict(prompt)
             for chunk in resp:
                 full_response += chunk + " "
-                time.sleep(0.1)
+                time.sleep(1)
                 # Add a blinking cursor to simulate typing
                 message_placeholder.markdown(full_response + "▌")
 
             message_placeholder.markdown(full_response)
         # Add assistant response to chat history
         st.session_state.messages.append({"role": "assistant", "content": full_response})
+
+
+def main():
+    # Accept user input
+    # myform()
+    chat()
 
 
 if __name__ == '__main__':
