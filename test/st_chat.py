@@ -35,42 +35,53 @@ st.title("ChatBot:ship:")
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+def predict(prompt):
+    assistant_response = random.choice(
+        [
+            "Hello there! How can I assist you today?",
+            "Hi, human! Is there anything I can help you with?",
+            "Do you need help?",
+        ]
+    )
+    # Simulate stream of response with milliseconds delay
+    assistant_response = f"{assistant_response}\ntmp:{temprature}\ntop_p{top_p}\ndo_sample{do_sample}"
+    for i in assistant_response.split():
+        yield i
 # Display chat messages from history on app rerun
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
+for i in range(len(st.session_state.messages)):
+    message = st.session_state.messages[i]
+    # with st.chat_message(message["role"]):
         # st.markdown(message["content"])
-        if message['role'] == "user":
-            chat_msg(message["content"], is_user=True)
-        elif message['role'] == 'assistant':
-            chat_msg(message['content'], allow_html=True)
+    if message['role'] == "user":
+        chat_msg(message["content"], is_user=True, key=f"{i}_user")
+
+    elif message['role'] == 'assistant':
+        chat_msg(message['content'], allow_html=True, key=f"{i}")
 
 # Accept user input
-if prompt := st.chat_input("What is up?"):
-    # Add user message to chat history
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    # Display user message in chat message container
-    with st.chat_message("user"):
-        # st.markdown(prompt)
-        chat_msg(prompt, is_user=True)
-    # Display assistant response in chat message container
-    with st.chat_message("assistant"):
-        message_placeholder = st.empty()
-        full_response = ""
-        assistant_response = random.choice(
-            [
-                "Hello there! How can I assist you today?",
-                "Hi, human! Is there anything I can help you with?",
-                "Do you need help?",
-            ]
-        )
-        # Simulate stream of response with milliseconds delay
-        assistant_response = f"{assistant_response}\ntmp:{temprature}\ntop_p{top_p}\ndo_sample{do_sample}"
-        for chunk in assistant_response.split():
-            full_response += chunk + " "
-            time.sleep(0.05)
-            # Add a blinking cursor to simulate typing
-            message_placeholder.markdown(full_response + "▌")
+def main():
+    if prompt := st.chat_input("What is up?"):
+        # Add user message to chat history
+        st.session_state.messages.append({"role": "user", "content": prompt})
 
-        message_placeholder.markdown(full_response)
-    # Add assistant response to chat history
-    st.session_state.messages.append({"role": "assistant", "content": full_response})
+        # Display user message in chat message container
+        chat_msg(prompt, is_user=True, key="user")
+        # Display assistant response in chat message container
+        with st.chat_message("assistant"):
+            message_placeholder = st.empty()
+            full_response = ""
+            resp = predict(prompt)
+            for chunk in resp:
+                full_response += chunk + " "
+                time.sleep(0.1)
+                # Add a blinking cursor to simulate typing
+                message_placeholder.markdown(full_response + "▌")
+
+            message_placeholder.markdown(full_response)
+        # Add assistant response to chat history
+        st.session_state.messages.append({"role": "assistant", "content": full_response})
+
+
+if __name__ == '__main__':
+    main()
+
